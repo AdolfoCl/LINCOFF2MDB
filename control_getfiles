@@ -1,0 +1,6 @@
+open 172.16.2.248
+tvprjuzb
+lb450
+get ARC/OUTPUT/LINCOFF2MDB/BATFILE fuente_batfile.bat
+get ARC/OUTPUT/LINCOFF2MDB/GETFILES fuente_getfiles
+quit
