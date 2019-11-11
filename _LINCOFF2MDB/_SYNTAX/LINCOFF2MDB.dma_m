@@ -1,0 +1,75 @@
+$SET TEXTCOL 5                                                          1000000001.001.001
+ GENERAL SECTION.                                                       1000010001.001.001
+%================                                                       1000020001.001.001
+                                                                        1000030001.001.001
+        TOKENS    :   BADTOK    "<TOKEN INVALIDO>"               ,      1000040001.001.001
+                      IDNTOK    "<IDENTIFICADOR>"                ,      1000050001.001.001
+                      RESTOK    "<PALABRA RESERVADA>" (DEFAULT)  ,      1000060001.001.001
+                      NUMTOK    "<NUMERO>"                       ,      1000070001.001.001
+                      STRTOK    "<CTE STRING>"                   ,      1000080001.001.001
+                      CHRTOK    "<CC ESPECIAL>"       (CHR)      ,      1000090001.001.001
+                      TXTTOK    "<TEXTO>"                        ,      1000100001.001.001
+                      EOLTOK    "<END OF LINE>"                  ,      1000110001.001.001
+                      ETXTOK    "<FIN DE TEXTO>"                 ;      1000120001.001.001
+                                                                        1000130001.001.001
+        GLOBALS: @2 '$INCLUDE NXTK_FROMDASDL  ';                        10001400ADC-181220
+        INITIAL: @5 'INICIO;  ';                                        1000150001.001.001
+        FINAL  : @5 'PROCESO; '.                                        1000160001.001.001
+                                                                        1000170001.001.001
+%-----------------------------------------------------------------------1000180001.001.001
+                                                                        1000190001.001.001
+ SYNTAX SECTION.                                                        1000200001.001.001
+%===============                                                        1000210001.001.001
+                                                                        1000220001.001.001
+ DEFINE  <PROGRAM> = GETPROGRAM                                         10002300ADC-180717
+ %       =========                                                      1000240001.001.001
+ (                                                                      10002500ADC-180717
+ LOCAL   'INTEGER actualLevel;                                        ' 10002600ADC-191108
+ ):                                                                     10002700ADC-191108
+                                                                        1000280001.001.001
+ #A1:    EMPTY.                                                         10002900ADC-191108
+                                                                        10003000ADC-191108
+ #A2A:   <LEVEL>'(actualLevel)'; GO TO A1.                              10003100ADC-191108
+                                                                        10003200ADC-191108
+ #A2B:   EMPTY.                                                         10003300ADC-191108
+                                                                        10003400ADC-191108
+ DEFINE  <LEVEL> = GETLEVEL                                             10003500ADC-191108
+ %       =======                                                        10003600ADC-191108
+                      '(prevLevel);VALUE prevLevel;INTEGER prevLevel;'  10003700ADC-191108
+ (                                                                      10003800ADC-191108
+ LOCAL   'INTEGER actualLevel;                                        ' 10003900ADC-191108
+ ):                                                                     10004000ADC-191108
+                                                                        10004100ADC-191108
+ #A1:    NUMTOK, 'IF (vlToken LEQ prevLevel) THEN                     ' 10004200ADC-191110
+                 '  RETURN (ISNTENTITY);                              ' 10004300ADC-191110
+                 'actualLevel := vlToken;                             ';10004700ADC-191110
+                                                                        10004800ADC-191108
+         IDNTOK.                                                        10004900ADC-191108
+                                                                        10005000ADC-191108
+ #A2A:   ".".                                                           10005100ADC-191108
+                                                                        10005200ADC-191108
+ #A2A2A: EMPTY.                                                         10005300ADC-191108
+                                                                        10005400ADC-191108
+ #A2A2A2A:<LEVEL>'(actualLevel)'; GO TO A2A2A.                          10005500ADC-191108
+                                                                        10005600ADC-191108
+ #A2A2A2B:EMPTY.                                                        10005700ADC-191108
+                                                                        10005800ADC-191108
+                                                                        10005900ADC-191108
+ #A2B:   "PIC".                                                         10006000ADC-191108
+                                                                        10006100ADC-191108
+ #A2B2A: NUMTOK.                                                        10006200ADC-191108
+                                                                        10006300ADC-191108
+ #A2B2B: "X".                                                           10006400ADC-191108
+                                                                        10006500ADC-191108
+ #A2B3A:  "("; NUMTOK; ")".                                             10006600ADC-191111
+                                                                        10006700ADC-191108
+ #A2B3A2A: "V9"; "("; NUMTOK; ")".                                      10006800ADC-191111
+                                                                        10006900ADC-191108
+ #A2B3A2B: EMPTY.                                                       10007000ADC-191111
+                                                                        10007020ADC-191111
+ #A2B3B: EMPTY.                                                         10007040ADC-191111
+                                                                        10007100ADC-191108
+ #A2B5:  ".".                                                           10007200ADC-191108
+                                                                        10007300ADC-191108
+ #A2C:   "OCCURS";  NUMTOK;  ".".                                       10008000ADC-191111
+                                                                        10009000ADC-191111
