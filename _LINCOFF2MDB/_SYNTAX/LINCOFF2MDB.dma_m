@@ -24,52 +24,83 @@ $SET TEXTCOL 5                                                          10000000
  DEFINE  <PROGRAM> = GETPROGRAM                                         10002300ADC-180717
  %       =========                                                      1000240001.001.001
  (                                                                      10002500ADC-180717
- LOCAL   'INTEGER actualLevel;                                        ' 10002600ADC-191108
+ LOCAL   'INTEGER actualLevel, len;                                   ' 10002600ADC-191111
  ):                                                                     10002700ADC-191108
                                                                         1000280001.001.001
  #A1:    EMPTY.                                                         10002900ADC-191108
                                                                         10003000ADC-191108
- #A2A:   <LEVEL>'(actualLevel)'; GO TO A1.                              10003100ADC-191108
+ #A2A:   <LEVEL>'(0, actualLevel, 0, len)'; GO TO A1.                   10003100ADC-191112
                                                                         10003200ADC-191108
  #A2B:   EMPTY.                                                         10003300ADC-191108
                                                                         10003400ADC-191108
  DEFINE  <LEVEL> = GETLEVEL                                             10003500ADC-191108
  %       =======                                                        10003600ADC-191108
-                      '(prevLevel);VALUE prevLevel;INTEGER prevLevel;'  10003700ADC-191108
+                      '(inxFather, prevLevel, off, len);'               10003700ADC-191112
+                      'VALUE inxFather, prevLevel, off;'                10003720ADC-191112
+                      'INTEGER inxFather, prevLevel,off,len;'           10003740ADC-191112
  (                                                                      10003800ADC-191108
- LOCAL   'INTEGER actualLevel;                                        ' 10003900ADC-191108
+ LOCAL   'INTEGER actualLevel, inx, childOff, childLen;               ' 10003900ADC-191111
  ):                                                                     10004000ADC-191108
                                                                         10004100ADC-191108
  #A1:    NUMTOK, 'IF (vlToken LEQ prevLevel) THEN                     ' 10004200ADC-191110
                  '  RETURN (ISNTENTITY);                              ' 10004300ADC-191110
                  'actualLevel := vlToken;                             ';10004700ADC-191110
                                                                         10004800ADC-191108
-         IDNTOK.                                                        10004900ADC-191108
+         IDNTOK, 'inx := getAreaTABDB(CDB_GROUPSIZE*6+szToken+1);     ' 10004900ADC-191112
+                 'REPLACE PDB_NAME(inx) BY pTok FOR szToken+szBytes;  ' 10004920ADC-191111
+                 'VDB_OFFSET(inx) := off DIV 1;                       ' 10004940ADC-191112
+                 'VDB_OCCURS(inx) := 1 DIV 1;                         ' 10004950ADC-191112
+                 'IF actualLevel = 1 THEN addIspec(inx)               ' 10004960ADC-191112
+                 'ELSE addChild(inxFather, inx);                      '.10004980ADC-191112
                                                                         10005000ADC-191108
- #A2A:   ".".                                                           10005100ADC-191108
+ #A2A:   ".";                                                           10005100ADC-191111
+                                                                        10005120ADC-191111
+         'childOff := 0;                                              '.10005140ADC-191111
                                                                         10005200ADC-191108
- #A2A2A: EMPTY.                                                         10005300ADC-191108
+ #A2A2A: EMPTY; 'childLen := 0;                                       '.10005300ADC-191113
                                                                         10005400ADC-191108
- #A2A2A2A:<LEVEL>'(actualLevel)'; GO TO A2A2A.                          10005500ADC-191108
+ #A2A2A2A:<LEVEL>'(inx, actualLevel, childOff, childLen)';              10005500ADC-191112
+                                                                        10005520ADC-191111
+          'childOff :=* + childLen;                                   ' 10005540ADC-191112
+          'len :=* + childLen;                                        ';10005550ADC-191112
+                                                                        10005560ADC-191111
+          GO TO A2A2A.                                                  10005580ADC-191111
                                                                         10005600ADC-191108
  #A2A2A2B:EMPTY.                                                        10005700ADC-191108
                                                                         10005800ADC-191108
                                                                         10005900ADC-191108
  #A2B:   "PIC".                                                         10006000ADC-191108
                                                                         10006100ADC-191108
- #A2B2A: NUMTOK.                                                        10006200ADC-191108
+ #A2B2A: NUMTOK; 'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  '.10006200ADC-191111
                                                                         10006300ADC-191108
- #A2B2B: "X".                                                           10006400ADC-191108
+ #A2B2B: "X";    'VDB_PIC(inx) := CDB_ALPHA DIV 1;                    '.10006400ADC-191112
                                                                         10006500ADC-191108
- #A2B3A:  "("; NUMTOK; ")".                                             10006600ADC-191111
+ #A2B3A:  "("; NUMTOK, 'VDB_LENGTH(inx) := vlToken DIV 1;'; ")".        10006600ADC-191111
                                                                         10006700ADC-191108
- #A2B3A2A: "V9"; "("; NUMTOK; ")".                                      10006800ADC-191111
+ #A2B3A2A: "V9"; "("; NUMTOK, 'VDB_DECIMALS(inx) := vlToken DIV 1;';    10006800ADC-191111
+                 ")".                                                   10006850ADC-191111
                                                                         10006900ADC-191108
  #A2B3A2B: EMPTY.                                                       10007000ADC-191111
                                                                         10007020ADC-191111
  #A2B3B: EMPTY.                                                         10007040ADC-191111
                                                                         10007100ADC-191108
- #A2B5:  ".".                                                           10007200ADC-191108
+ #A2B5:  ".";                                                           10007200ADC-191111
+                                                                        10007220ADC-191111
+         'len := VDB_LENGTH(inx) + VDB_DECIMALS(inx);                 '.10007240ADC-191111
                                                                         10007300ADC-191108
- #A2C:   "OCCURS";  NUMTOK;  ".".                                       10008000ADC-191111
+ #A2C:   "OCCURS";  NUMTOK, 'VDB_OCCURS(inx) := vlToken DIV 1;';  ".";  10008000ADC-191111
+                                                                        10008050ADC-191111
+         'childOff := 0;                                              '.10008100ADC-191111
+                                                                        10008150ADC-191111
+ #A2C2A: EMPTY; 'childLen := 0;                                       '.10008200ADC-191113
+                                                                        10008250ADC-191111
+ #A2C2A2A:<LEVEL>'(inx, actualLevel, childOff, childLen)';              10008300ADC-191112
+                                                                        10008350ADC-191111
+          'childOff :=* + childLen;                                   ';10008400ADC-191113
+                                                                        10008450ADC-191111
+          GO TO A2C2A.                                                  10008500ADC-191111
+                                                                        10008550ADC-191111
+ #A2C2A2B:EMPTY;                                                        10008600ADC-191111
+                                                                        10008650ADC-191111
+          'len := childOff * VDB_OCCURS(inx);                         '.10008700ADC-191111
                                                                         10009000ADC-191111
