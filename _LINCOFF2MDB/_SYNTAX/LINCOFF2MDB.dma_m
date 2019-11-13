@@ -62,18 +62,19 @@ $SET TEXTCOL 5                                                          10000000
  #A2A2A2A:<LEVEL>'(inx, actualLevel, childOff, childLen)';              10005500ADC-191112
                                                                         10005520ADC-191111
           'childOff :=* + childLen;                                   ' 10005540ADC-191112
-          'len :=* + childLen;                                        ';10005550ADC-191112
+          'len :=* + childLen;                                        ' 10005550ADC-191113
+          'VDB_LENGTH(inx) := len DIV 1;                              ';10005555ADC-191113
                                                                         10005560ADC-191111
           GO TO A2A2A.                                                  10005580ADC-191111
                                                                         10005600ADC-191108
  #A2A2A2B:EMPTY.                                                        10005700ADC-191108
                                                                         10005800ADC-191108
                                                                         10005900ADC-191108
- #A2B:   "PIC".                                                         10006000ADC-191108
+ #A2B:   "PIC";  'VDB_LENGTH(inx) := 1; %Por default                  '.10006000ADC-191113
                                                                         10006100ADC-191108
- #A2B2A: NUMTOK; 'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  '.10006200ADC-191111
+ #A2B2A: NUMTOK; 'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  '.10006200ADC-191113
                                                                         10006300ADC-191108
- #A2B2B: "X";    'VDB_PIC(inx) := CDB_ALPHA DIV 1;                    '.10006400ADC-191112
+ #A2B2B: "X";    'VDB_PIC(inx) := CDB_ALPHA DIV 1;                    '.10006400ADC-191113
                                                                         10006500ADC-191108
  #A2B3A:  "("; NUMTOK, 'VDB_LENGTH(inx) := vlToken DIV 1;'; ")".        10006600ADC-191111
                                                                         10006700ADC-191108
@@ -102,5 +103,6 @@ $SET TEXTCOL 5                                                          10000000
                                                                         10008550ADC-191111
  #A2C2A2B:EMPTY;                                                        10008600ADC-191111
                                                                         10008650ADC-191111
-          'len := childOff * VDB_OCCURS(inx);                         '.10008700ADC-191111
+          'len := childOff * VDB_OCCURS(inx);                         ' 10008700ADC-191113
+          'VDB_LENGTH(inx) := len DIV 1;                              '.10008800ADC-191113
                                                                         10009000ADC-191111

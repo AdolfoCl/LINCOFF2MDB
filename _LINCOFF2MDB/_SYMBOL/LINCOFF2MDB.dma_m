@@ -27,7 +27,7 @@ $VERSION 01.001.001                                                     10000200
      (KIND=DISK                                                         10002600          
      ,MYUSE=IN                                                          10002700          
      ,FILETYPE=7                                                        10002800          
-     ,title="ARC/INPUT/LINCOFF."                                        10002850ADC-191113
+%    ,title="ARC/INPUT/LINCOFF."                                        10002850ADC-191113
      )                                                                  10002900          
   ,CARD                                                                 10003000          
      (KIND=READER                                                       10003100          
@@ -178,1570 +178,380 @@ $VERSION 01.001.001                                                     10000200
     ;                                                                   10017600          
                                                                         10017700          
 %$INCLUDE LINCOFF2MDB_INCLUDE 100100-99999998                           10017800          
-    DEFINE       BADTOK                  = 48"00"                #,     10017900          
-                 IDNTOK                  = 48"01"                #,     10018000          
-                 RESTOK                  = 48"02"                #,     10018100          
-                 NUMTOK                  = 48"03"                #,     10018200          
-                 STRTOK                  = 48"04"                #,     10018300          
-                 CHRTOK                  = 48"05"                #,     10018400          
-                 TXTTOK                  = 48"06"                #,     10018500          
-                 EOLTOK                  = 48"07"                #,     10018600          
-                 ETXTOK                  = 48"08"                #;     10018700          
-                                                                        10018800          
-    VALUE ARRAY TABKEYWORD                                              10018900          
-         (                                                              10019000          
-          48"01""X          ", RESTOK,                                  10019100          
-          48"02""V9         ", RESTOK,                                  10019200          
-          48"03""PIC        ", RESTOK,                                  10019300          
-          48"06""OCCURS     ", RESTOK,                                  10019400          
-          5(0)                                                          10019500          
-         );                                                             10019600          
-                                                                        10019700          
-    DEFINE       MAXESCSTACK    = 50 #;                                 10019800          
-    DEFINE        KWENTRYSIZE            = 3                     #,     10019900          
-                  KWINXMAX               = 4                     #,     10020000          
-                 TKWTOKEN                = 0                     #,     10020100          
-                 TKWTOKENLENGTH          = 0].[47:SZBITS         #,     10020200          
-                 TKWTYPETOK              = 2                     #;     10020300          
-                                                                        10020400          
-    DEFINE CASE_ESCAPE =                                                10020500          
-           #;                                                           10020600          
- %----------------------------------------------------------------------10020700          
-    DEFINE     SZBYTES                 = 1                     #,       10020800          
-               SZBITS1                 = 7                     #,       10020900          
-               SZBITS                  = 8                     #,       10021000          
-               SZTYPETOK               = 1                     #,       10021100          
-               SZBYTESF(SZ)            = ((SZ) DIV 1).[7:48] FOR 1 #,   10021200          
-               SZTYPETOKF (SZ)         = ((SZ) DIV 1).[7:48] FOR 1 #,   10021300          
-               BADENTITY               = 1                     #,       10021400          
-               ISNTENTITY              = 2                     #;       10021500          
-    DEFINE RETURN (RESULT) =                                            10021600          
-        BEGIN                                                           10021700          
-        ENTITYRESULT := RESULT;                                         10021800          
-        GO TO EXIT;                                                     10021900          
-        END OF RETURN #;                                                10022000          
-    ARRAY        ESCSTACK [0:MAXESCSTACK];                              10022100          
-    POINTER      PTOKEN,                                                10022200          
-                 PTOK;                                                  10022300          
-    REAL         SZTOKEN,                                               10022400          
-                 IESCSTACK;                                             10022500          
- %PROCEDURE NEXTTOKEN; FORWARD;                                         10022600          
- %PROCEDURE ERROR (MSG); VALUE MSG; STRING MSG; FORWARD;                10022700          
- %PROCEDURE SEND  (MSG); VALUE MSG; STRING MSG; FORWARD;                10022800          
- BOOLEAN PROCEDURE KEYWORD (TYPETOK);REAL TYPETOK; FORWARD;             10022900          
- REAL PROCEDURE ESCAPE; FORWARD;                                        10023000          
- %----------------------------------------------------------------------10023100          
- REAL PROCEDURE GETPROGRAM;                                             10023200          
- FORWARD;                                       %%----00500100          10023300          
- REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               10023400          
- VALUE inxFather, prevLevel, off;                                       10023500          
- INTEGER inxFather, prevLevel,off,len;                                  10023600          
- FORWARD;                                       %%----00502600          10023700          
-%$INCLUDE NXTK_FROMDASDL                                                10023800          
- %----------------------------------------------------------------------10023900          
- ARRAY                                                                  10024000          
-   TOKARRAY [0:60]                                                      10024100          
-  ;                                                                     10024200          
- REAL                                                                   10024300          
-   VLTOKEN                                                              10024400          
-  ;                                                                     10024500          
-                                                                        10024600          
-%$INCLUDE "DASDL2SQL/01001001/SYMBOL/NEXTTOKEN/BASE"                    10024700          
- %----------------------------------------------------------------------10024800          
-                                                                        10024900          
- TYPE STRUCTURE BLOCK NEXTTOKEN_DASDL;                                  10025000          
-   BEGIN                                                                10025100          
-                                                                        10025200          
-   TRUTHSET                                                             10025300          
-     numbers   ("0123456789")                                           10025400          
-%   ,LETRAS    ((ALPHA OR "abcdefghijklmnopqrstuvwxyz")                 10025500          
-%                          AND NOT numbers)                             10025600          
-%   ,IDNCHRS   (ALPHA OR "-" OR "." OR "_"                              10025700          
-%                      OR "abcdefghijklmnopqrstuvwxyz")                 10025800          
-%   ,FINZTRING ("'" 48"00")                                             10025900          
-    ,FINSTRING (""" 48"00")                                             10026000          
-%   ,FINCONSTA (")" 48"00")                                             10026100          
-    ;                                                                   10026200          
-                                                                        10026300          
-   EBCDIC ARRAY                                                         10026400          
-     IB [0:1*K]                                                         10026500          
-    ,OB [0:599]                                                         10026600          
-    ,EW [0:599]                                                         10026700          
-    ,EZ [0:131]                                                         10026800          
-    ;                                                                   10026900          
-                                                                        10027000          
-   HEX    ARRAY                                                         10027100          
-     HW [0] = EW                                                        10027200          
-    ;                                                                   10027300          
-                                                                        10027400          
-   EBCDIC ARRAY                                                         10027500          
-     EDATA [0:200]                                                      10027600          
-    ;                                                                   10027700          
-                                                                        10027800          
-   REAL                                                                 10027900          
-     IDATA                                                              10028000          
-    ,NIDATA                                                             10028100          
-    ,MAXIDATA                                                           10028200          
-    ;                                                                   10028300          
-                                                                        10028400          
-   REAL                                                                 10028500          
-     SEQ                                                                10028600          
-    ,NEST                                                               10028700          
-    ,INXNEST                                                            10028800          
-    ,CARDRECSIZE                                                        10028900          
-    ,MAXKEYTOK                                                          10029000          
-    ,WFRECORD                                                           10029100          
-    ,NCC                                                                10029200          
-    ,NUMKEYTOK                                                          10029300          
-    ,MINESCAPE                                                          10029400          
-    ;                                                                   10029500          
-                                                                        10029600          
-   INTEGER ARRAY                                                        10029700          
-     iTextArray                                                         10029800          
-    ,lTextArray                                                         10029900          
-    ,iSeqArray                                                          10030000          
-    ,lSeqArray                                                          10030100          
-    ,iMarkidArray                                                       10030200          
-    ,lMarkidArray[0:10]                                                 10030300          
-    ;                                                                   10030400          
-                                                                        10030500          
-   DEFINE                                                               10030600          
-     iText = iTextArray[NEST] #                                         10030700          
-    ,lText = lTextArray[NEST] #                                         10030800          
-    ,iSeq  = iSeqArray[NEST] #                                          10030900          
-    ,lSeq  = lSeqArray[NEST] #                                          10031000          
-    ,iMarkid = iMarkidArray[NEST] #                                     10031100          
-    ,lMarkid = lMarkidArray[NEST] #                                     10031200          
-    ;                                                                   10031300          
-                                                                        10031400          
-   BOOLEAN                                                              10031500          
-     showCard                                                           10031600          
-    ,withTerminal                                                       10031700          
-    ,linePrinted                                                        10031800          
-    ,lineEnterm                                                         10031900          
-    ,printErrors                                                        10032000          
-    ;                                                                   10032100          
-                                                                        10032200          
-   POINTER                                                              10032300          
-     P                                                                  10032400          
-    ,Q                                                                  10032500          
-    ,PW                                                                 10032600          
-    ,PL                                                                 10032700          
-    ,PO                                                                 10032800          
-    ;                                                                   10032900          
-                                                                        10033000          
-   EBCDIC ARRAY                                                         10033100          
-     LINEA [1:179]                                                      10033200          
-    ,LOGO  [0:131]                                                      10033300          
-    ;                                                                   10033400          
-                                                                        10033500          
-   TRUTHSET                                                             10033600          
-     MINUSCULAS ("abcdefghijklmnopqrstuvwxyz")                          10033700          
-    ,ALFABASE   (ALPHA OR MINUSCULAS OR "-")                            10033800          
-    ,ALFABASE2  (ALPHA OR MINUSCULAS OR "-_")                           10033900          
-    ;                                                                   10034000          
-                                                                        10034100          
-   TRANSLATETABLE                                                       10034200          
-     lower2UPPER ( EBCDIC TO EBCDIC,                                    10034300          
-                  "abcdefghijklmn|opqrstuvwxyz" TO                      10034400          
-                  "ABCDEFGHIJKLMN\OPQRSTUVWXYZ"                         10034500          
-                 );                                                     10034600          
-                                                                        10034700          
-   DEFINE                                                               10034800          
-     ZOMIT1                  =  1                    #                  10034900          
-    ,ZOMIT2                  =  100                  #                  10035000          
-    ,ZNEST1                  =  6                    #                  10035100          
-    ,ZNEST2                  =  95                   #                  10035200          
-  % ,ZSEQ1                   =  8                    #                  10035300          
-    ,ZSEQ1                   =  0                    #                  10035400          
-  % ,ZSEQ2                   =  97                   #                  10035500          
-    ,ZSEQ2                   =  89                   #                  10035600          
-  % ,ZMARK                   =  108                  #                  10035700          
-    ,ZMARK                   =  100                  #                  10035800          
-  % ,ZTEXT                   =  17                   #                  10035900          
-    ,ZTEXT                   =  9                    #                  10036000          
-    ,MAXSEQ                  =  99999999             #                  10036100          
-    ,SEQ_INCR                =  100                  #                  10036200          
-    ,SEQ_INICIAL             =  100000               #                  10036300          
-    ,SEQ_PROGRAM             =  500000               #                  10036400          
-    ,SEQ_OUTERBLOCK          =  90000000             #                  10036500          
-    ,SEQ_ENDPROGRAM          =  99999999             #                  10036600          
-    ,WFRECSIZE               =  15                   #                  10036700          
-    ,PREINVOKE               =  1                    #                  10036800          
-    ,MIDINVOKE               =  2                    #                  10036900          
-    ,POSINVOKE               =  3                    #                  10037000          
-  % ,PUT                     =  REPLACE PO:PO BY     #                  10037100          
-    ,MAXLARGOSTRING          =  72                   #                  10037200          
-    ;                                                                   10037300          
-                                                                        10037400          
-   FILE                                                                 10037500          
-     CARD1                                                              10037600          
-      (KIND        = DISK                                               10037700          
-      ,MYUSE       = IN                                                 10037800          
-      )                                                                 10037900          
-    ,CARD2                                                              10038000          
-      (KIND        = DISK                                               10038100          
-      ,MYUSE       = IN                                                 10038200          
-      )                                                                 10038300          
-    ,CARD3                                                              10038400          
-      (KIND        = DISK                                               10038500          
-      ,MYUSE       = IN                                                 10038600          
-      )                                                                 10038700          
-    ,CARD4                                                              10038800          
-      (KIND        = DISK                                               10038900          
-      ,MYUSE       = IN                                                 10039000          
-      )                                                                 10039100          
-    ,CARD5                                                              10039200          
-      (KIND        = DISK                                               10039300          
-      ,MYUSE       = IN                                                 10039400          
-      )                                                                 10039500          
-    ;                                                                   10039600          
-                                                                        10039700          
-   SWITCH FILE                                                          10039800          
-     KARD := CFILE, CARD1, CARD2, CARD3, CARD4, CARD5                   10039900          
-    ;                                                                   10040000          
-                                                                        10040100          
-   FILE                                                                 10040200          
-     ERRORS                                                             10040300          
-      (KIND=PRINTER                                                     10040400          
-      ,MAXRECSIZE=132                                                   10040500          
-      ,UNITS=CHARACTERS                                                 10040600          
-      )                                                                 10040700          
-  % ,TERM                                                               10040800          
-  %   (KIND=REMOTE                                                      10040900          
-  %   ,MYUSE=OUT                                                        10041000          
-  %   ,MAXRECSIZE=1920                                                  10041100          
-  %   ,UNITS=CHARACTERS                                                 10041200          
-  %   )                                                                 10041300          
-    ;                                                                   10041400          
-                                                                        10041500          
- %----------------------------------------------------------------------10041600          
-                                                                        10041700          
-      DEFINE       TGR_SIZE                =  0                    #,   10041800          
-                   CGR_SIZEINICIAL         =  200                  #,   10041900          
-                   CGR_OVFLW               =  1                    #,   10042000          
-                   CGR_INCR                =  50                   #,   10042100          
-                   TGR_FIRSTAVAIL          =  1].[47:16            #,   10042200          
-                   CGR_FIRSTAVAILINICIAL   =  10                   #,   10042300          
-                   TGR_INXSOURCE           =  1].[31:16            #,   10042400          
-                   TGR_INXINITIAL          =  1].[15:16            #,   10042500          
-                   TGR_INXFINAL            =  2].[47:16            #,   10042600          
-                   TGR_USEROPTIONS         =  2].[31:01            #,   10042700          
-                   TGR_SETLIST             =  2].[30:01            #,   10042800          
-                   TGR_SETLISTINCL         =  2].[29:01            #,   10042900          
-                   TGR_SETSINGLE           =  2].[28:01            #,   10043000          
-                   TGR_SYNTAX              =  2].[27:01            #,   10043100          
-                   TGR_LIST                =  2].[26:01            #,   10043200          
-                   TGR_OMIT                =  2].[25:01            #,   10043300          
-                   TGR_SOURCEOPTIONS       =  2].[24:01            #,   10043400          
-                   TGR_INXGLOBALS          =  2].[15:16            #,   10043500          
-                   TGR_FIRSTTOKTYPE        =  3].[47:16            #,   10043600          
-                   TGR_LASTTOKTYPE         =  3].[31:16            #,   10043700          
-                   TGR_INXDEFTOKTYPE       =  3].[15:16            #,   10043800          
-                   TGR_INXCHRTOKTYPE       =  4].[47:16            #,   10043900          
-                   TGR_FIRSTENTITY         =  4].[31:16            #,   10044000          
-                   TGR_LASTENTITY          =  4].[15:16            #,   10044100          
-                   TGR_INXPROGRAM          =  5].[47:16            #,   10044200          
-                                                                        10044300          
-                   TGR_FIRSTBLOCK          =  5].[15:16            #,   10044400          
-                   TGR_LASTBLOCK           =  6].[47:16            #,   10044500          
-                   TGR_FIRSTPROCNAME       =  6].[31:16            #,   10044600          
-                   TGR_LASTPROCNAME        =  6].[15:16            #,   10044700          
-                   TGR_FIRSTKEYTOK         =  7].[47:16            #,   10044800          
-                   TGR_LASTKEYTOK          =  7].[31:16            #,   10044900          
-                   TGR_INXPRETEXT          =  7].[15:16            #,   10045000          
-                   TGR_INXPOSTEXT          =  8].[47:16            #,   10045100          
-                                                                        10045200          
-           VGR_SIZE                =  TABGRAL [TGR_SIZE]           #,   10045300          
-           VGR_FIRSTAVAIL          =  TABGRAL [TGR_FIRSTAVAIL]     #,   10045400          
-           VGR_INXSOURCE           =  TABGRAL [TGR_INXSOURCE]      #,   10045500          
-           VGR_INXINITIAL          =  TABGRAL [TGR_INXINITIAL]     #,   10045600          
-           VGR_INXFINAL            =  TABGRAL [TGR_INXFINAL]       #,   10045700          
-           VGR_USEROPTIONS         =  TABGRAL [TGR_USEROPTIONS]    #,   10045800          
-           VGR_SETLIST             =  TABGRAL [TGR_SETLIST]        #,   10045900          
-           VGR_SETLISTINCL         =  TABGRAL [TGR_SETLISTINCL]    #,   10046000          
-           VGR_SETSINGLE           =  TABGRAL [TGR_SETSINGLE]      #,   10046100          
-           VGR_SYNTAX              =  TABGRAL [TGR_SYNTAX]         #,   10046200          
-           VGR_LIST                =  TABGRAL [TGR_LIST]           #,   10046300          
-           VGR_OMIT                =  TABGRAL [TGR_OMIT]           #,   10046400          
-           VGR_SOURCEOPTIONS       =  TABGRAL [TGR_SOURCEOPTIONS]  #,   10046500          
-           VGR_INXGLOBALS          =  TABGRAL [TGR_INXGLOBALS]     #,   10046600          
-           VGR_FIRSTTOKTYPE        =  TABGRAL [TGR_FIRSTTOKTYPE]   #,   10046700          
-           VGR_LASTTOKTYPE         =  TABGRAL [TGR_LASTTOKTYPE]    #,   10046800          
-           VGR_INXDEFTOKTYPE       =  TABGRAL [TGR_INXDEFTOKTYPE]  #,   10046900          
-           VGR_INXCHRTOKTYPE       =  TABGRAL [TGR_INXCHRTOKTYPE]  #,   10047000          
-           VGR_FIRSTENTITY         =  TABGRAL [TGR_FIRSTENTITY]    #,   10047100          
-           VGR_LASTENTITY          =  TABGRAL [TGR_LASTENTITY]     #,   10047200          
-           VGR_INXPROGRAM          =  TABGRAL [TGR_INXPROGRAM]     #,   10047300          
-           VGR_FIRSTBLOCK          =  TABGRAL [TGR_FIRSTBLOCK]     #,   10047400          
-           VGR_LASTBLOCK           =  TABGRAL [TGR_LASTBLOCK]      #,   10047500          
-           VGR_FIRSTPROCNAME       =  TABGRAL [TGR_FIRSTPROCNAME]  #,   10047600          
-           VGR_LASTPROCNAME        =  TABGRAL [TGR_LASTPROCNAME]   #,   10047700          
-           VGR_FIRSTKEYTOK         =  TABGRAL [TGR_FIRSTKEYTOK]    #,   10047800          
-           VGR_LASTKEYTOK          =  TABGRAL [TGR_LASTKEYTOK]     #,   10047900          
-           VGR_INXPRETEXT          =  TABGRAL [TGR_INXPRETEXT]     #,   10048000          
-           VGR_INXPOSTEXT          =  TABGRAL [TGR_INXPOSTEXT]     #,   10048100          
-                                                                        10048200          
-                   TBL_PREVBLOCK           =  0].[47:16            #,   10048300          
-                   TBL_NEXTBLOCK           =  0].[31:16            #,   10048400          
-                   TBL_BLOCK               =  0].[15:16            #,   10048500          
-                   TBL_FIRSTREC            =  1].[47:16            #,   10048600          
-                   TBL_LASTREC             =  1].[31:16            #,   10048700          
-                   TBL_FOUND               =  1].[15:01            #,   10048800          
-                   TBL_EMPTY               =  1].[14:01            #,   10048900          
-                   CBL_BLOCKSIZE           =  2                    #,   10049000          
-                                                                        10049100          
-           VBL_PREVBLOCK    [INX]  =  TABGRAL [INX+TBL_PREVBLOCK]  #,   10049200          
-           VBL_NEXTBLOCK    [INX]  =  TABGRAL [INX+TBL_NEXTBLOCK]  #,   10049300          
-           VBL_BLOCK        [INX]  =  TABGRAL [INX+TBL_BLOCK]      #,   10049400          
-           VBL_FIRSTREC     [INX]  =  TABGRAL [INX+TBL_FIRSTREC]   #,   10049500          
-           VBL_LASTREC      [INX]  =  TABGRAL [INX+TBL_LASTREC]    #,   10049600          
-           VBL_FOUND        [INX]  =  TABGRAL [INX+TBL_FOUND]      #,   10049700          
-           VBL_EMPTY        [INX]  =  TABGRAL [INX+TBL_EMPTY]      #,   10049800          
-                                                                        10049900          
-                   TEX_TIPO                =  0].[47:16            #,   10050000          
-                   CEX_USER                =  1                    #,   10050100          
-                   CEX_COPY                =  2                    #,   10050200          
-                   CEX_INCLUDE             =  3                    #,   10050300          
-                   TEX_FIRSTREC            =  0].[31:16            #,   10050400          
-                   TEX_LASTREC             =  0].[15:16            #,   10050500          
-                   TEX_INXBLOCK            =  1].[47:16            #,   10050600          
-                   TEX_INXFILENAME         =  1].[31:16            #,   10050700          
-                   TEX_CONSEQRANGE         =  1].[15:01            #,   10050800          
-                   TEX_SEQ1                =  2                    #,   10050900          
-                   TEX_SEQ2                =  3                    #,   10051000          
-                   CEX_EXTSPECSIZE         =  4                    #,   10051100          
-                                                                        10051200          
-           VEX_TIPO         [INX]  =  TABGRAL [INX+TEX_TIPO]       #,   10051300          
-           VEX_FIRSTREC     [INX]  =  TABGRAL [INX+TEX_FIRSTREC]   #,   10051400          
-           VEX_LASTREC      [INX]  =  TABGRAL [INX+TEX_LASTREC]    #,   10051500          
-           VEX_INXBLOCK     [INX]  =  TABGRAL [INX+TEX_INXBLOCK]   #,   10051600          
-           VEX_INXFILENAME  [INX]  =  TABGRAL [INX+TEX_INXFILENAME]#,   10051700          
-           VEX_SEQ1         [INX]  =  TABGRAL [INX+TEX_SEQ1]       #,   10051800          
-           VEX_SEQ2         [INX]  =  TABGRAL [INX+TEX_SEQ2]       #,   10051900          
-           VEX_CONSEQRANGE  [INX]  =  TABGRAL [INX+TEX_CONSEQRANGE]#;   10052000          
-                                                                        10052100          
-                                                                        10052200          
-      ARRAY        TABGRAL [0:CGR_SIZEINICIAL];                         10052300          
-                                                                        10052400          
-   PROCEDURE GETAREA_TABGRAL (INX,PORTE);                               10052500          
-     VALUE   PORTE;                                                     10052600          
-     REAL    PORTE, INX;                                                10052700          
-     BEGIN                                                              10052800          
-                                                                        10052900          
-     procedureName := syntaxErrors;                                     10053000          
-     INX := VGR_FIRSTAVAIL;                                             10053100          
-     VGR_FIRSTAVAIL := INX + PORTE;                                     10053200          
-     IF (VGR_SIZE < VGR_FIRSTAVAIL + CGR_OVFLW) THEN                    10053300          
-       BEGIN                                                            10053400          
-       VGR_SIZE := VGR_FIRSTAVAIL + CGR_INCR;                           10053500          
-       RESIZE (TABGRAL,VGR_SIZE,RETAIN);                                10053600          
-       END;                                                             10053700          
-     REPLACE TABGRAL [INX] BY 0 FOR PORTE WORDS;                        10053800          
-     END OF GETAREA_TABGRAL;                                            10053900          
-                                                                        10054000          
-   BOOLEAN PROCEDURE FIND_INXBLOCK (BLOCK,INXBLOCK);                    10054100          
-     VALUE   BLOCK;                                                     10054200          
-     REAL    BLOCK, INXBLOCK;                                           10054300          
-     BEGIN                                                              10054400          
-                                                                        10054500          
-     procedureName := syntaxErrors;                                     10054600          
-     INXBLOCK := VGR_FIRSTBLOCK;                                        10054700          
-     WHILE (IF (INXBLOCK = 0) THEN                                      10054800          
-              FALSE                                                     10054900          
-            ELSE                                                        10055000          
-              VBL_BLOCK [INXBLOCK] NEQ BLOCK                            10055100          
-           )                                                            10055200          
-     DO                                                                 10055300          
-       INXBLOCK := VBL_NEXTBLOCK [INXBLOCK];                            10055400          
-     FIND_INXBLOCK := (INXBLOCK = 0);                                   10055500          
-     END OF FIND_INXBLOCK;                                              10055600          
-                                                                        10055700          
-   PROCEDURE GET_INXBLOCK (BLOCK,INXBLOCK);                             10055800          
-     VALUE   BLOCK;                                                     10055900          
-     REAL    BLOCK, INXBLOCK;                                           10056000          
-     BEGIN                                                              10056100          
-     REAL   INXPREV;                                                    10056200          
-                                                                        10056300          
-     GETAREA_TABGRAL (INXBLOCK,CBL_BLOCKSIZE);                          10056400          
-     VBL_BLOCK [INXBLOCK] := BLOCK;                                     10056500          
-     INXPREV := VGR_LASTBLOCK;                                          10056600          
-     IF (INXPREV = 0) THEN                                              10056700          
-       VGR_FIRSTBLOCK := INXBLOCK                                       10056800          
-     ELSE                                                               10056900          
-       BEGIN                                                            10057000          
-       VBL_PREVBLOCK [INXBLOCK] := INXPREV;                             10057100          
-       VBL_NEXTBLOCK [INXPREV ] := INXBLOCK;                            10057200          
-       END;                                                             10057300          
-     VGR_LASTBLOCK := INXBLOCK;                                         10057400          
-     END OF GET_INXBLOCK;                                               10057500          
-                                                                        10057600          
-   PROCEDURE GET_INXEXTSPEC (INXEXTSPEC,TIPO);                          10057700          
-     VALUE   TIPO;                                                      10057800          
-     REAL    TIPO, INXEXTSPEC;                                          10057900          
-     BEGIN                                                              10058000          
-                                                                        10058100          
-     GETAREA_TABGRAL (INXEXTSPEC,CEX_EXTSPECSIZE);                      10058200          
-     VEX_TIPO [INXEXTSPEC] := TIPO;                                     10058300          
-     END OF GET_INXEXTSPEC;                                             10058400          
-                                                                        10058500          
- %----------------------------------------------------------------------10058600          
-                                                                        10058700          
-      DEFINE       TNS_SIZE                =  0                    #,   10058800          
-                   CNS_SIZEINICIAL         =  20                   #,   10058900          
-                   CNS_OVFLW               =  1                    #,   10059000          
-                   CNS_INCR                =  10                   #,   10059100          
-                   TNS_FIRSTAVAIL          =  1].[47:16            #,   10059200          
-                   CNS_FIRSTAVAILINICIAL   =  2                    #,   10059300          
-                   TNS_FIRSTNEST           =  1].[31:16            #,   10059400          
-                   TNS_LASTNEST            =  1].[15:16            #,   10059500          
-                                                                        10059600          
-                   TNS_PREVNEST            =  0].[47:16            #,   10059700          
-                   TNS_NEXTNEST            =  0].[31:16            #,   10059800          
-                   TNS_LASTSEQ             =  1                    #,   10059900          
-                   CNS_NESTSIZE            =  2                    #,   10060000          
-                                                                        10060100          
-           VNS_SIZE                =  TABNEST [TNS_SIZE      ]     #,   10060200          
-           VNS_FIRSTAVAIL          =  TABNEST [TNS_FIRSTAVAIL]     #,   10060300          
-           VNS_FIRSTNEST           =  TABNEST [TNS_FIRSTNEST ]     #,   10060400          
-           VNS_LASTNEST            =  TABNEST [TNS_LASTNEST  ]     #,   10060500          
-                                                                        10060600          
-           VNS_PREVNEST [INX]      =  TABNEST [INX+TNS_PREVNEST]   #,   10060700          
-           VNS_NEXTNEST [INX]      =  TABNEST [INX+TNS_NEXTNEST]   #,   10060800          
-           VNS_LASTSEQ  [INX]      =  TABNEST [INX+TNS_LASTSEQ ]   #,   10060900          
-                                                                        10061000          
-                   MAXNEST                 =  5                    #;   10061100          
-                                                                        10061200          
-      ARRAY        TABNEST [0:CNS_SIZEINICIAL];                         10061300          
-                                                                        10061400          
-   PROCEDURE GETAREA_TABNEST (INX,PORTE);                               10061500          
-     VALUE   PORTE;                                                     10061600          
-     REAL    PORTE, INX;                                                10061700          
-     BEGIN                                                              10061800          
-                                                                        10061900          
-     INX := VNS_FIRSTAVAIL;                                             10062000          
-     VNS_FIRSTAVAIL := INX + PORTE;                                     10062100          
-     IF (VNS_SIZE < VNS_FIRSTAVAIL + CNS_OVFLW) THEN                    10062200          
-       BEGIN                                                            10062300          
-       VNS_SIZE := VNS_FIRSTAVAIL + CNS_INCR;                           10062400          
-       RESIZE (TABNEST,VNS_SIZE+1,RETAIN);                              10062500          
-       END;                                                             10062600          
-     REPLACE TABNEST [INX] BY 0 FOR PORTE WORDS;                        10062700          
-     END OF GETAREA_TABNEST;                                            10062800          
-                                                                        10062900          
-   PROCEDURE GET_INXNEST;                                               10063000          
-     BEGIN                                                              10063100          
-     REAL                                                               10063200          
-       INXPREV;                                                         10063300          
-                                                                        10063400          
-     GETAREA_TABNEST (INXNEST,CNS_NESTSIZE);                            10063500          
-     INXPREV := VNS_LASTNEST;                                           10063600          
-     IF (INXPREV = 0) THEN                                              10063700          
-       VNS_FIRSTNEST := INXNEST                                         10063800          
-     ELSE                                                               10063900          
-       BEGIN                                                            10064000          
-       VNS_PREVNEST [INXNEST] := INXPREV;                               10064100          
-       VNS_NEXTNEST [INXPREV] := INXNEST;                               10064200          
-       END;                                                             10064300          
-     VNS_LASTNEST := INXNEST;                                           10064400          
-     REPLACE EZ BY " " FOR 132;                                         10064500          
-     IF (VGR_OMIT = 1) THEN                                             10064600          
-       BEGIN                                                            10064700          
-       REPLACE EZ [ZOMIT1] BY "OMIT";                                   10064800          
-       REPLACE EZ [ZOMIT2] BY "OMIT";                                   10064900          
-       END;                                                             10065000          
-     IF (NEST > 0) THEN                                                 10065100          
-       BEGIN                                                            10065200          
-       REPLACE EZ [ZNEST1] BY NEST FOR 1 DIGITS,".";                    10065300          
-       REPLACE EZ [ZNEST2] BY NEST FOR 1 DIGITS,".";                    10065400          
-       END;                                                             10065500          
-     END OF GET_INXNEST;                                                10065600          
-                                                                        10065700          
-   PROCEDURE DEL_INXNEST;                                               10065800          
-     BEGIN                                                              10065900          
-                                                                        10066000          
-     VNS_FIRSTAVAIL := INXNEST;                                         10066100          
-     INXNEST        := VNS_PREVNEST [INXNEST];                          10066200          
-     VNS_LASTNEST   := INXNEST;                                         10066300          
-     VNS_NEXTNEST [INXNEST] := 0;                                       10066400          
-     REPLACE EZ BY " " FOR 132;                                         10066500          
-     IF (VGR_OMIT = 1) THEN                                             10066600          
-       BEGIN                                                            10066700          
-       REPLACE EZ [ZOMIT1] BY "OMIT";                                   10066800          
-       REPLACE EZ [ZOMIT2] BY "OMIT";                                   10066900          
-       END;                                                             10067000          
-     IF (NEST > 0) THEN                                                 10067100          
-       BEGIN                                                            10067200          
-       REPLACE EZ [ZNEST1] BY NEST FOR 1 DIGITS,".";                    10067300          
-       REPLACE EZ [ZNEST2] BY NEST FOR 1 DIGITS,".";                    10067400          
-       END;                                                             10067500          
-     END OF DEL_INXNEST;                                                10067600          
-                                                                        10067700          
- %----------------------------------------------------------------------10067800          
-                                                                        10067900          
-   REAL PROCEDURE EXPDIGITS (N);                                        10068000          
-     VALUE   N;                                                         10068100          
-     REAL    N;                                                         10068200          
-     BEGIN                                                              10068300          
-                                                                        10068400          
-     REAL   I;                                                          10068500          
-     WHILE (N :=* DIV 10 NEQ 0) DO I :=* + 1;                           10068600          
-     EXPDIGITS := I + 1;                                                10068700          
-     END OF EXPDIGITS;                                                  10068800          
-                                                                        10068900          
-   PROCEDURE printLine;                                                 10069000          
-     BEGIN                                                              10069100          
-                                                                        10069200          
-     IF (NOT LINE.OPEN) THEN                                            10069300          
-       BEGIN                                                            10069400          
-       REPLACE EZ BY " " FOR 132;                                       10069500          
-       REPLACE EZ [10]                                                  10069600          
-            BY MYSELF.NAME," VERSION ",                                 10069700          
-               COMPILETIME(20) FOR 2 DIGITS,".",                        10069800          
-               COMPILETIME(21) FOR 3 DIGITS,".",                        10069900          
-               COMPILETIME(22) FOR 3 DIGITS;                            10070000          
-       IF (VGR_LIST = 1) THEN                                           10070100          
-         BEGIN                                                          10070200          
-         WRITE (LINE,132,EZ);                                           10070300          
-         WRITE (LINE,<" ",///>);                                        10070400          
-         END;                                                           10070500          
-       END;                                                             10070600          
-     REPLACE EZ BY " " FOR 132;                                         10070700          
-     REPLACE EZ [ZSEQ1] BY IB [iSeq] FOR lSeq;                          10070800          
-  %  REPLACE EZ [ZSEQ2] BY IB [72] FOR 8;                               10070900          
-     REPLACE EZ [ZMARK] BY IB [iMarkid] FOR lMarkid;                    10071000          
-     REPLACE EZ [ZTEXT] BY IB [iText] FOR ltext;                        10071100          
-     WRITE (LINE,132,EZ);                                               10071200          
-     linePrinted := TRUE;                                               10071300          
-     END OF printLine;                                                  10071400          
-                                                                        10071500          
-   PROCEDURE printErrorLine;                                            10071600          
-     BEGIN                                                              10071700          
-                                                                        10071800          
-     IF (NOT ERRORS.OPEN) THEN                                          10071900          
-       BEGIN                                                            10072000          
-       REPLACE EZ BY " " FOR 132;                                       10072100          
-       REPLACE EZ [10] BY MYSELF.NAME," VERSION ",                      10072200          
-                          COMPILETIME(20) FOR 2 DIGITS,".",             10072300          
-                          COMPILETIME(21) FOR 3 DIGITS,".",             10072400          
-                          COMPILETIME(22) FOR 3 DIGITS;                 10072500          
-       WRITE (ERRORS,132,EZ);                                           10072600          
-       END;                                                             10072700          
-     REPLACE EZ BY " " FOR 132;                                         10072800          
-     REPLACE EZ [ZSEQ1] BY IB [iSeq] FOR lSeq;                          10072900          
-  %  REPLACE EZ [ZSEQ2] BY IB [72] FOR 8;                               10073000          
-     REPLACE EZ [ZMARK] BY IB [iMarkid] FOR lMarkid;                    10073100          
-     REPLACE EZ [ZTEXT] BY IB [iText] FOR lText;                        10073200          
-     WRITE (ERRORS,132,EZ);                                             10073300          
-     END OF printErrorLine;                                             10073400          
-                                                                        10073500          
-   PROCEDURE SEND (msg);                                                10073600          
-     VALUE   msg;                                                       10073700          
-     STRING  msg;                                                       10073800          
-     BEGIN                                                              10073900          
-     REAL                                                               10074000          
-       N                                                                10074100          
-      ;                                                                 10074200          
-                                                                        10074300          
-     N := LENGTH (msg);                                                 10074400          
-     IF (VGR_LIST = 1) THEN                                             10074500          
-       WRITE (LINE,<A*>,N,msg);                                         10074600          
-     IF printErrors THEN                                                10074700          
-       WRITE (ERRORS,<A*>,N,msg);                                       10074800          
-     IF withTerminal THEN                                               10074900          
-       WRITE (TERM,<4"11",A*,4"27D20D03">,N,msg);                       10075000          
-     cfile_error(msg);                                                  10075100          
-     END OF SEND;                                                       10075200          
-                                                                        10075300          
-   PROCEDURE SENDTERM (MSG);                                            10075400          
-     VALUE   MSG;                                                       10075500          
-     STRING  MSG;                                                       10075600          
-     BEGIN                                                              10075700          
-     EBCDIC  ARRAY                                                      10075800          
-       E [0:239]                                                        10075900          
-      ;                                                                 10076000          
-     POINTER                                                            10076100          
-       P                                                                10076200          
-      ;                                                                 10076300          
-                                                                        10076400          
-     REPLACE P:E BY 48"11","# ",MYSELF.NAME;                            10076500          
-     REPLACE P:P-1 BY " ",COMPILETIME(20) FOR 2 DIGITS,".",             10076600          
-                          COMPILETIME(21) FOR 3 DIGITS,".",             10076700          
-                          COMPILETIME(22) FOR 3 DIGITS," ",             10076800          
-                          MSG,48"27D20D03";                             10076900          
-     IF WRITE (TERM,OFFSET(P),E) THEN;                                  10077000          
-     END OF SENDTERM;                                                   10077100          
-                                                                        10077200          
-   INTEGER                                                              10077300          
-     lastInfo                                                           10077400          
-    ;                                                                   10077500          
-                                                                        10077600          
-   PROCEDURE SENDPROGRESS(total, actual);                               10077700          
-     VALUE total, actual;                                               10077800          
-     INTEGER total, actual;                                             10077900          
-     BEGIN                                                              10078000          
-     EBCDIC ARRAY                                                       10078100          
-       e [0:239]                                                        10078200          
-      ;                                                                 10078300          
-     LABEL                                                              10078400          
-       EXIT                                                             10078500          
-      ;                                                                 10078600          
-     POINTER                                                            10078700          
-       p                                                                10078800          
-      ;                                                                 10078900          
-                                                                        10079000          
-     p := e;                                                            10079100          
-     IF total > 0 THEN                                                  10079200          
-       BEGIN                                                            10079300          
-       IF (actual/total*100 < lastInfo + 2) THEN                        10079400          
-         GO TO EXIT;                                                    10079500          
-       lastInfo := actual/total*100;                                    10079600          
-       REPLACE p:p                                                      10079700          
-            BY 48"11", "|","=" FOR (lastInfo/2)-1,">";                  10079800          
-       END;                                                             10079900          
-     REPLACE p:p BY " " FOR 50-OFFSET(p),"|",48"27D203";                10080000          
-     IF WRITE (TERM,OFFSET(P),E) THEN;                                  10080100          
-   EXIT:                                                                10080200          
-     END of SENDPROGRESS;                                               10080300          
-                                                                        10080400          
-   PROCEDURE ERROR (MSG);                                               10080500          
-     VALUE   MSG;                                                       10080600          
-     STRING  MSG;                                                       10080700          
-     BEGIN                                                              10080800          
-     POINTER                                                            10080900          
-       PIB                                                              10081000          
-      ;                                                                 10081100          
-     REAL                                                               10081200          
-       K                                                                10081300          
-      ,N                                                                10081400          
-      ,rModule_GeneralF                                                 10081500          
-      ;                                                                 10081600          
-                                                                        10081700          
-     IF showCard THEN                                                   10081800          
-       BEGIN                                                            10081900          
-       IF (NOT linePrinted) THEN                                        10082000          
-         printLine;                                                     10082100          
-       IF printErrors THEN                                              10082200          
-         printErrorLine;                                                10082300          
-       N := 2 + OFFSET (P);                                             10082400          
-       K := EXPDIGITS (SEQ);                                            10082500          
-       IF withTerminal AND (NOT lineEnterm) THEN                        10082600          
-         BEGIN                                                          10082700          
-         lineEnterm := TRUE;                                            10082800          
-         PIB := IB[iText];                                              10082900          
-         IF paramOnly THEN                                              10083000          
-           WRITE (TERM,lText,PIB)                                       10083100          
-         ELSE                                                           10083200          
-           WRITE (TERM,<4"1127D20D",I*,X1,A72,4"27D20D03">,K,SEQ,       10083300          
-                  PIB FOR lText);                                       10083400          
-         END;                                                           10083500          
-       IF (VGR_LIST = 1) THEN                                           10083600          
-         WRITE (LINE,<T*,"*">,ZTEXT+N);                                 10083700          
-       IF printErrors THEN                                              10083800          
-         WRITE (ERRORS,<T*,"*">,ZTEXT+N);                               10083900          
-       IF withTerminal THEN                                             10084000          
-         IF paramOnly THEN                                              10084100          
-           WRITE (TERM,<4"11",T*,"*",4"27D20D03">,N)                    10084200          
-         ELSE                                                           10084300          
-           WRITE (TERM,<4"11",T*,"*",4"27D20D03">,K+2+N);               10084400          
-       END;                                                             10084500          
-     SEND (MSG);                                                        10084600          
-     DISPLAY(MSG);                                                      10084700          
-     syntaxErrors := TRUE;                                              10084800          
-     file_error_count :=*+1;                                            10084900          
-     END OF ERROR;                                                      10085000          
-                                                                        10085100          
-   PROCEDURE VEOPCION;                                                  10085200          
-     BEGIN                                                              10085300          
-     LABEL                                                              10085400          
-       EXIT,                                                            10085500          
-       READKARD,                                                        10085600          
-       ENDSEARCH,                                                       10085700          
-       SKAN;                                                            10085800          
-     REAL                                                               10085900          
-       I,                                                               10086000          
-       N,                                                               10086100          
-       SEQ1,                                                            10086200          
-       SEQ2,                                                            10086300          
-       IMIN,                                                            10086400          
-       IMAX;                                                            10086500          
-     BOOLEAN                                                            10086600          
-       ENDLOOP,                                                         10086700          
-       BIT;                                                             10086800          
-     POINTER                                                            10086900          
-       Q;                                                               10087000          
-     EBCDIC ARRAY                                                       10087100          
-       ETITLE [0:119];                                                  10087200          
-                                                                        10087300          
-     DEFINE       RETURN (MSG) = BEGIN                                  10087400          
-                                 DISPLAY (MSG !! " " !! STRING (P,1));  10087500          
-                                 GO TO EXIT;                            10087600          
-                                 END OF RETURN #;                       10087700          
-                                                                        10087800          
-     PROCEDURE GETTITLE;                                                10087900          
-       BEGIN                                                            10088000          
-                                                                        10088100          
-       BOOLEAN PROCEDURE GETSUBNAME;                                    10088200          
-         BEGIN                                                          10088300          
-         LABEL     EXIT;                                                10088400          
-         DEFINE    RETURN = BEGIN                                       10088500          
-                               GETSUBNAME := TRUE;                      10088600          
-                               GO TO EXIT;                              10088700          
-                            END OF RETURN #;                            10088800          
-                                                                        10088900          
-         IF (P IN ALPHA) THEN                                           10089000          
-           BEGIN                                                        10089100          
-           SCAN P FOR N:18 WHILE IN ALFABASE;                           10089200          
-           N := 18-N;                                                   10089300          
-           IF (N = 0) OR (N > 17) THEN RETURN;                          10089400          
-           REPLACE Q:Q BY P:P FOR N;                                    10089500          
-           END                                                          10089600          
-         ELSE IF (P = """) THEN                                         10089700          
-           BEGIN                                                        10089800          
-           SCAN P+1 FOR N:20 WHILE NEQ """;                             10089900          
-           N := 20 - N;                                                 10090000          
-           IF (P+(N+1) NEQ """) THEN RETURN;                            10090100          
-           IF (N = 0) OR (N > 18) THEN RETURN;                          10090200          
-           REPLACE Q:Q BY """,P:P+1 UNTIL = """,""";                    10090300          
-           P :=* + 1;                                                   10090400          
-           END                                                          10090500          
-         ELSE                                                           10090600          
-           RETURN;                                                      10090700          
-         SCAN P:P WHILE = " ";                                          10090800          
-       EXIT:                                                            10090900          
-         END OF GETSUBNAME;                                             10091000          
-                                                                        10091100          
-       Q := ETITLE[1];                                                  10091200          
-       IF (P = "*") THEN                                                10091300          
-         REPLACE Q:Q BY P:P FOR 1                                       10091400          
-       ELSE IF (P = "(") THEN                                           10091500          
-         BEGIN                                                          10091600          
-         REPLACE Q:Q BY P:P FOR 1;                                      10091700          
-         SCAN P:P WHILE = " ";                                          10091800          
-         IF GETSUBNAME  THEN                                            10091900          
-           RETURN ("INVALID <USERCODE> SPEC");                          10092000          
-         IF (P NEQ ")") THEN                                            10092100          
-           RETURN (") EXPECTED");                                       10092200          
-         REPLACE Q:Q BY P:P FOR 1;                                      10092300          
-         END;                                                           10092400          
-       SCAN P:P WHILE = " ";                                            10092500          
-       IF GETSUBNAME THEN                                               10092600          
-         RETURN ("INVALID <FILE TITLE> SPEC");                          10092700          
-       WHILE (P = "/") DO                                               10092800          
-         BEGIN                                                          10092900          
-         REPLACE Q:Q BY P:P FOR 1;                                      10093000          
-         SCAN P:P WHILE = " ";                                          10093100          
-         IF GETSUBNAME THEN                                             10093200          
-           RETURN ("INVALID <FILE TITLE> SPEC");                        10093300          
-         END;                                                           10093400          
-       IF (P = "ON") AND NOT (P+2 IN ALPHA) THEN                        10093500          
-         BEGIN                                                          10093600          
-         REPLACE Q:Q BY " ON ";                                         10093700          
-         SCAN P:P+2 WHILE = " ";                                        10093800          
-         IF GETSUBNAME THEN                                             10093900          
-           RETURN ("INVALID <PACK NAME> SPEC");                         10094000          
-         END;                                                           10094100          
-       REPLACE Q:Q BY ".";                                              10094200          
-       END OF GETTITLE;                                                 10094300          
-                                                                        10094400          
-     REPLACE ETITLE [0] BY IB [72] FOR 1;                               10094500          
-     REPLACE IB[iText] BY IB[iText] FOR lText WITH lower2UPPER,48"00";  10094600          
-     SCAN P:P+1 WHILE = " ";                                            10094700          
-                                                                        10094800          
-     IF ((P = "INCLUDE") AND NOT (P+7 IN ALPHA)) THEN                   10094900          
-       BEGIN                                                            10095000          
-       SCAN P:P+7 WHILE = " ";                                          10095100          
-       GETTITLE;                                                        10095200          
-       IF (P IN numbers) THEN                                           10095300          
-         BEGIN                                                          10095400          
-         SCAN P FOR N:99 WHILE IN numbers;                              10095500          
-         IF (N:=99-N > 12)  THEN                                        10095600          
-           RETURN ("TOO MANY DIGITS");                                  10095700          
-         SEQ1 := INTEGER(P,N);                                          10095800          
-         SCAN P:P+N WHILE = " ";                                        10095900          
-         IF (P NEQ  "-")    THEN                                        10096000          
-           RETURN ("- EXPECTED");                                       10096100          
-         SCAN P:P+1 WHILE = " ";                                        10096200          
-         IF (P IN numbers) THEN                                         10096300          
-           BEGIN                                                        10096400          
-           SCAN P FOR N:99 WHILE IN numbers;                            10096500          
-           IF (N:=99-N > 12) THEN                                       10096600          
-             RETURN ("TOO MANY DIGITS");                                10096700          
-           SEQ2 := INTEGER(P,N);                                        10096800          
-           SCAN P:P+N WHILE = " ";                                      10096900          
-           END                                                          10097000          
-         ELSE IF (P = "END") AND NOT (P+3 IN ALPHA) THEN                10097100          
-           BEGIN                                                        10097200          
-           SCAN P:P+3 WHILE = " ";                                      10097300          
-           SEQ2 := MAXSEQ;                                              10097400          
-           END                                                          10097500          
-         ELSE                                                           10097600          
-           RETURN ("NUMBER OR END EXPECTED");                           10097700          
-         END                                                            10097800          
-       ELSE                                                             10097900          
-         BEGIN                                                          10098000          
-         SEQ1 := 0;                                                     10098100          
-         SEQ2 := MAXSEQ;                                                10098200          
-         END;                                                           10098300          
-       IF (NEST GEQ MAXNEST) THEN                                       10098400          
-         RETURN ("MAXIMUM INCLUDE LEVEL EXCEEDED");                     10098500          
-       NEST :=* + 1;                                                    10098600          
-       REPLACE KARD[NEST].TITLE BY ETITLE [1];                          10098700          
-       KARD[NEST].FILETYPE := 7;                                        10098800          
-       KARD[NEST].OPEN     := TRUE;                                     10098900          
-       GET_INXNEST;                                                     10099000          
-       IF (SEQ2 > MAXSEQ) OR (SEQ1 > SEQ2) THEN                         10099100          
-         RETURN ("INVALID SEQ RANGE");                                  10099200          
-       IMIN := 0;                                                       10099300          
-       IMAX := KARD[NEST].LASTRECORD;                                   10099400          
-       I    := (IMIN + IMAX + 1) DIV 2;                                 10099500          
-       GO TO READKARD;                                                  10099600          
-       DO                                                               10099700          
-         BEGIN                                                          10099800          
-         IF (SEQ = SEQ1) THEN                                           10099900          
-           GO TO ENDSEARCH;                                             10100000          
-         IF (SEQ < SEQ1) THEN                                           10100100          
-           I := ((IMIN:=I+1) + IMAX) DIV 2                              10100200          
-         ELSE                                                           10100300          
-           I := (IMIN + (IMAX:=I))   DIV 2;                             10100400          
-   READKARD:                                                            10100500          
-         READ (KARD[NEST][I],CARDRECSIZE,IB);                           10100600          
-         SEQ := INTEGER (IB[72],8);                                     10100700          
-         END                                                            10100800          
-       UNTIL (IMIN GEQ IMAX);                                           10100900          
-   ENDSEARCH:                                                           10101000          
-       IF (SEQ < SEQ1) OR (SEQ > SEQ2) THEN                             10101100          
-         BEGIN                                                          10101200          
-         LOCK (KARD[NEST]);                                             10101300          
-         NEST :=* - 1;                                                  10101400          
-         DEL_INXNEST;                                                   10101500          
-         END                                                            10101600          
-       ELSE                                                             10101700          
-         BEGIN                                                          10101800          
-         VNS_LASTSEQ [INXNEST] := SEQ2;                                 10101900          
-         I := KARD[NEST].RECORD;                                        10102000          
-         SEEK (KARD[NEST][I]);                                          10102100          
-         END;                                                           10102200          
-       END                                                              10102300          
-     ELSE                                                               10102400          
-       BEGIN                                                            10102500          
-   SKAN:                                                                10102600          
-       WHILE ((P = "SET"  ) AND NOT (P+3 IN ALPHA))                     10102700          
-          OR ((P = "RESET") AND NOT (P+5 IN ALPHA))                     10102800          
-          OR ((P = "POP")   AND NOT (P+3 IN ALPHA)) DO                  10102900          
-         BEGIN                                                          10103000          
-         IF (P = "SET") THEN                                            10103100          
-           BEGIN                                                        10103200          
-           BIT := TRUE;                                                 10103300          
-           SCAN P:P+3 WHILE = " ";                                      10103400          
-           END                                                          10103500          
-         ELSE                                                           10103600          
-           BEGIN                                                        10103700          
-           BIT := FALSE;                                                10103800          
-           SCAN P:P+5 WHILE = " ";                                      10103900          
-           END;                                                         10104000          
-         ENDLOOP := FALSE;                                              10104100          
-         DO                                                             10104200          
-           BEGIN                                                        10104300          
-           IF (P = "LIST") AND NOT (P+4 IN ALPHA) THEN                  10104400          
-             BEGIN                                                      10104500          
-             SCAN P:P+4 WHILE = " ";                                    10104600          
-             IF (VGR_LIST = 0) AND BIT THEN                             10104700          
-               BEGIN                                                    10104800          
-               REPLACE IB [72] BY ETITLE [0] FOR 1;                     10104900          
-               printLine;                                               10105000          
-               REPLACE IB [72] BY 48"00";                               10105100          
-               END;                                                     10105200          
-             VGR_LIST := REAL (BIT);                                    10105300          
-             END                                                        10105400          
-           ELSE IF (P = "OMIT") AND NOT (P+4 IN ALPHA) THEN             10105500          
-             BEGIN                                                      10105600          
-             SCAN P:P+4 WHILE = " ";                                    10105700          
-             VGR_OMIT := REAL (BIT);                                    10105800          
-             IF BIT THEN                                                10105900          
-               REPLACE EZ [ZOMIT1] BY "OMIT"                            10106000          
-             ELSE                                                       10106100          
-               REPLACE EZ [ZOMIT1] BY "    ";                           10106200          
-             REPLACE EZ [ZOMIT2] BY EZ [ZOMIT1] FOR 4;                  10106300          
-             END                                                        10106400          
-           ELSE IF (P = "ZIP") AND NOT (P+3 IN ALPHA) THEN              10106500          
-             BEGIN                                                      10106600          
-             SCAN P:P+3 WHILE = " ";                                    10106700          
-             END                                                        10106800          
-           ELSE IF (P = "DMCONTROL") AND NOT (P+9 IN ALPHA) THEN        10106900          
-             BEGIN                                                      10107000          
-             SCAN P:P+9 WHILE = " ";                                    10107100          
-             END                                                        10107200          
-           ELSE IF (P = "SEQ") AND NOT (P+3 IN ALPHA) THEN              10107300          
-             BEGIN                                                      10107400          
-             SCAN P:P+3 WHILE = " ";                                    10107500          
-             END                                                        10107600          
-           ELSE IF (P = "LINC14") AND NOT (P+6 IN ALPHA) THEN           10107700          
-             BEGIN                                                      10107800          
-             SCAN P:P+6 WHILE = " ";                                    10107900          
-             END                                                        10108000          
-           ELSE                                                         10108100          
-             ENDLOOP := TRUE;                                           10108200          
-           END                                                          10108300          
-         UNTIL ENDLOOP;                                                 10108400          
-         END;                                                           10108500          
-                                                                        10108600          
-       IF (P = "PAGE") AND NOT (P+4 IN ALPHA) THEN                      10108700          
-         BEGIN                                                          10108800          
-         SCAN P:P+4 WHILE = " ";                                        10108900          
-         IF (VGR_LIST = 1) THEN                                         10109000          
-           WRITE (LINE [SKIP 1]);                                       10109100          
-         GO TO SKAN;                                                    10109200          
-         END;                                                           10109300          
-                                                                        10109400          
-       IF (P = "SYNTAX") AND NOT (P+6 IN ALPHA) THEN                    10109500          
-         BEGIN                                                          10109600          
-         SCAN P:P+6 WHILE = " ";                                        10109700          
-         VGR_SYNTAX := 1;                                               10109800          
-         GO TO SKAN;                                                    10109900          
-         END;                                                           10110000          
-                                                                        10110100          
-       IF (P NEQ 48"00") THEN                                           10110200          
-         RETURN ("OPCION INVALIDA");                                    10110300          
-       END;                                                             10110400          
-   EXIT:                                                                10110500          
-     END OF VE_OPCION;                                                  10110600          
-                                                                        10110700          
-   BOOLEAN PROCEDURE LEECARD;                                           10110800          
-     BEGIN                                                              10110900          
-     LABEL                                                              10111000          
-       EXIT                                                             10111100          
-      ,ENDNEST                                                          10111200          
-      ,READACARD                                                        10111300          
-      ;                                                                 10111400          
-                                                                        10111500          
-     REAL                                                               10111600          
-       N                                                                10111700          
-      ,L                                                                10111800          
-      ;                                                                 10111900          
-                                                                        10112000          
-   READACARD:                                                           10112100          
-     IF READ (KARD [NEST], CARDRECSIZE, IB) THEN                        10112200          
-       BEGIN                                                            10112300          
-       IF (NEST = 0) THEN                                               10112400          
-         BEGIN                                                          10112500          
-         LEECARD := TRUE;                                               10112600          
-         GO TO EXIT;                                                    10112700          
-         END;                                                           10112800          
-   ENDNEST:                                                             10112900          
-       LOCK (KARD [NEST]);                                              10113000          
-       NEST    :=* - 1;                                                 10113100          
-       DEL_INXNEST;                                                     10113200          
-       GO TO READACARD;                                                 10113300          
-       END;                                                             10113400          
-                                                                        10113500          
-     CASE KARD[NEST].FILEKIND OF                                        10113600          
-       BEGIN                                                            10113700          
-       (VALUE(ALGOLSYMBOL)):                                            10113800          
-       (VALUE(CCSYMBOL)):                                               10113900          
-       (VALUE(DASDLSYMBOL)):                                            10114000          
-       (VALUE(DCALGOLSYMBOL)):                                          10114100          
-       (VALUE(DCPSYMBOL)):                                              10114200          
-       (VALUE(DMALGOLSYMBOL)):                                          10114300          
-       (VALUE(FORTRAN77SYMBOL)):                                        10114400          
-       (VALUE(JAVASYMBOL)):                                             10114500          
-       (VALUE(NDLSYMBOL)):                                              10114600          
-       (VALUE(NDLIISYMBOL)):                                            10114700          
-       (VALUE(NEWPSYMBOL)):                                             10114800          
-       (VALUE(PASCALSYMBOL)):                                           10114900          
-       (VALUE(PASCAL83SYMBOL)):                                         10115000          
-       (VALUE(PLISYMBOL)):                                              10115100          
-       (VALUE(SANSSYMBOL)):                                             10115200          
-       (VALUE(SEQDATA)):                                                10115300          
-       (VALUE(SORTSYMBOL)):                                             10115400          
-       (VALUE(TEXTDATA)):                                               10115500          
-         BEGIN                                                          10115600          
-         iText := 0;                                                    10115700          
-         lText := NCC := 72;                                            10115800          
-         iSeq := 72;                                                    10115900          
-         lSeq := 8;                                                     10116000          
-         iMarkid := 80;                                                 10116100          
-         lMarkid := 10;                                                 10116200          
-         END;                                                           10116300          
-       (192): %VALUE(DATA)                                              10116400          
-         BEGIN                                                          10116500          
-         iText := 0;                                                    10116600          
-         lText := NCC := IF KARD[NEST].FRAMESIZE=8 THEN                 10116700          
-                           KARD[NEST].MAXRECSIZE                        10116800          
-                         ELSE KARD[NEST].MAXRECSIZE*6;                  10116900          
-         iSeq := 0;                                                     10117000          
-         lSeq := 0;                                                     10117100          
-         iMarkid := 0;                                                  10117200          
-         lMarkid := 0;                                                  10117300          
-         END;                                                           10117400          
-       (VALUE(JOBSYMBOL)):                                              10117500          
-         BEGIN                                                          10117600          
-         iText := 0;                                                    10117700          
-         lText := NCC := 80;                                            10117800          
-         iSeq := 82;                                                    10117900          
-         lSeq := 8;                                                     10118000          
-         iMarkid := 0;                                                  10118100          
-         lMarkid := 0;                                                  10118200          
-         END;                                                           10118300          
-       (VALUE(BASICSYMBOL)):                                            10118400          
-         BEGIN                                                          10118500          
-         iText := 4;                                                    10118600          
-         lText := NCC := 72;                                            10118700          
-         iSeq := 0;                                                     10118800          
-         lSeq := 4;                                                     10118900          
-         iMarkid := 72;                                                 10119000          
-         lMarkid := 8;                                                  10119100          
-         END;                                                           10119200          
-       (VALUE(BINDERSYMBOL)):                                           10119300          
-       (VALUE(FORTRANSYMBOL)):                                          10119400          
-       (VALUE(XFORTRANSYMBOL)):                                         10119500          
-         BEGIN                                                          10119600          
-         iText := 0;                                                    10119700          
-         lText := NCC := 72;                                            10119800          
-         iSeq := 72;                                                    10119900          
-         lSeq := 8;                                                     10120000          
-         iMarkid := 0;                                                  10120100          
-         lMarkid := 0;                                                  10120200          
-         END;                                                           10120300          
-       (VALUE(CDATA)):                                                  10120400          
-         BEGIN                                                          10120500          
-         iText := 0;                                                    10120600          
-         lText := NCC := 80;                                            10120700          
-         iSeq := 0;                                                     10120800          
-         lSeq := 0;                                                     10120900          
-         iMarkid := 0;                                                  10121000          
-         lMarkid := 0;                                                  10121100          
-         END;                                                           10121200          
-       (VALUE(COBOLSYMBOL)):                                            10121300          
-       (VALUE(COBOL74SYMBOL)):                                          10121400          
-       (VALUE(COBOL85SYMBOL)):                                          10121500          
-       (VALUE(LCOBOLSYMBOL)):                                           10121600          
-         BEGIN                                                          10121700          
-         iText := 6;                                                    10121800          
-         lText := NCC := 66;                                            10121900          
-         iSeq := 0;                                                     10122000          
-         lSeq := 6;                                                     10122100          
-         iMarkid := 72;                                                 10122200          
-         lMarkid := 6;                                                  10122300          
-         END;                                                           10122400          
-       (VALUE(CSEQDATA)):                                               10122500          
-         BEGIN                                                          10122600          
-         iText := 6;                                                    10122700          
-         lText := NCC := 74;                                            10122800          
-         iSeq := 0;                                                     10122900          
-         lSeq := 5;                                                     10123000          
-         iMarkid := 0;                                                  10123100          
-         lMarkid := 0;                                                  10123200          
-         END;                                                           10123300          
-       (VALUE(ESPOLSYMBOL)):                                            10123400          
-         BEGIN                                                          10123500          
-         iText := 0;                                                    10123600          
-         lText := NCC := 72;                                            10123700          
-         iSeq := 72;                                                    10123800          
-         lSeq := 8;                                                     10123900          
-         iMarkid := 80;                                                 10124000          
-         lMarkid := 8;                                                  10124100          
-         END;                                                           10124200          
-       (VALUE(RPGSYMBOL)):                                              10124300          
-         BEGIN                                                          10124400          
-         iText := 5;                                                    10124500          
-         lText := NCC := 75;                                            10124600          
-         iSeq := 0;                                                     10124700          
-         lSeq := 5;                                                     10124800          
-         iMarkid := 80;                                                 10124900          
-         lMarkid := 10;                                                 10125000          
-         END;                                                           10125100          
-       (VALUE(WIDESYMBOL)):                                             10125200          
-         BEGIN                                                          10125300          
-         iText := 21;                                                   10125400          
-         lText := NCC := 99;                                            10125500          
-         iSeq := 0;                                                     10125600          
-         lSeq := 11;                                                    10125700          
-         iMarkid := 11;                                                 10125800          
-         lMarkid := 10;                                                 10125900          
-         END;                                                           10126000          
-       ELSE:                                                            10126100          
-         BEGIN                                                          10126200          
-         DISPLAY("FILEKIND NO RECONOCIDO: "CAT                          10126300          
-                 STRING(KARD[NEST].FILEKIND,*));                        10126400          
-         iText := 0;                                                    10126500          
-         lText := NCC := IF KARD[NEST].FRAMESIZE=8 THEN                 10126600          
-                           KARD[NEST].MAXRECSIZE                        10126700          
-                         ELSE KARD[NEST].MAXRECSIZE*6;                  10126800          
-         iSeq := 0;                                                     10126900          
-         lSeq := 0;                                                     10127000          
-         iMarkid := 0;                                                  10127100          
-         lMarkid := 0;                                                  10127200          
-         END;                                                           10127300          
-       END of CASE;                                                     10127400          
-                                                                        10127500          
-     SEQ := INTEGER (IB[iSeq], lSeq);                                   10127600          
-     IF (SEQ > VNS_LASTSEQ [INXNEST]) THEN GO TO ENDNEST;               10127700          
-     linePrinted := lineEnterm := FALSE;                                10127800          
-     IF (VGR_LIST = 1) THEN                                             10127900          
-       printLine;                                                       10128000          
-     SCAN P:IB[iText] FOR lText WHILE = " ";                            10128100          
-     IF (P = "$") THEN                                                  10128200          
-       BEGIN                                                            10128300          
-       VEOPCION;                                                        10128400          
-       GO TO READACARD;                                                 10128500          
-       END;                                                             10128600          
-     IF (VGR_OMIT = 1) THEN                                             10128700          
-       GO TO READACARD;                                                 10128800          
-     Q   := IB[iText];                                                  10128900          
-   EXIT:                                                                10129000          
-     IF (KARD[0].KIND = VALUE(DISK)) THEN                               10129100          
-       SENDPROGRESS(KARD[0].LASTRECORD, KARD[0].CURRENTRECORD);         10129200          
-     END OF LEECARD;                                                    10129300          
-                                                                        10129400          
-   PROCEDURE NEXTTOKEN;                                                 10129500          
-     BEGIN                                                              10129600          
-     LABEL                                                              10129700          
-       SIGUE                                                            10129800          
-      ,EXIT                                                             10129900          
-      ;                                                                 10130000          
-     REAL                                                               10130100          
-       N                                                                10130200          
-      ,TYPETOK                                                          10130300          
-      ;                                                                 10130400          
-     DEFINE  RETURN (MSG) = BEGIN                                       10130500          
-                           SEND (MSG);                                  10130600          
-                            REPLACE PTOKEN BY BADTOK;                   10130700          
-                            GO TO EXIT;                                 10130800          
-                            END OF RETURN #;                            10130900          
-                                                                        10131000          
-     IF (PTOKEN = ETXTOK) THEN                                          10131100          
-       GO TO EXIT;                                                      10131200          
-   SIGUE:                                                               10131300          
-     SCAN P:Q FOR NCC:NCC WHILE = " ";                                  10131400          
-                                                                        10131500          
-     IF (PTOKEN = EOLTOK) THEN                                          10131600          
-       BEGIN                                                            10131700          
-       IF paramOnly THEN                                                10131800          
-         BEGIN                                                          10131900          
-         REPLACE PTOKEN BY ETXTOK;                                      10132000          
-         GO TO EXIT;                                                    10132100          
-         END                                                            10132200          
-       ELSE                                                             10132300          
-       IF LEECARD THEN                                                  10132400          
-         BEGIN                                                          10132500          
-         REPLACE PTOKEN BY ETXTOK;                                      10132600          
-         GO TO EXIT;                                                    10132700          
-         END                                                            10132800          
-       ELSE                                                             10132900          
-         BEGIN                                                          10133000          
-         REPLACE PTOKEN BY BADTOK;                                      10133100          
-         GO TO SIGUE;                                                   10133200          
-         END;                                                           10133300          
-       END;                                                             10133400          
-     IF (IF (NCC < 1) THEN                                              10133500          
-           TRUE                                                         10133600          
-         ELSE                                                           10133700          
-           P = "*") THEN                                                10133800          
-  %  IF (NCC < 1) THEN                                                  10133900          
-       BEGIN                                                            10134000          
-       REPLACE PTOKEN BY EOLTOK,48"00";                                 10134100          
-       szToken := 0;                                                    10134200          
-       GO TO SIGUE;                                                     10134300          
-       END;                                                             10134400          
-                                                                        10134500          
-     IF (P IN numbers) THEN                                             10134600          
-       BEGIN                                                            10134700          
-       SCAN Q:P FOR N:NCC WHILE IN ALFABASE2;                           10134800          
-       SZTOKEN := NCC - N;                                              10134900          
-       NCC     := N;                                                    10135000          
-       IF (P IN numbers FOR SZTOKEN) THEN                               10135100          
-         BEGIN                                                          10135200          
-         REPLACE PTOKEN BY NUMTOK;                                      10135300          
-         VLTOKEN := INTEGER (P,SZTOKEN);                                10135400          
-         END                                                            10135500          
-       ELSE                                                             10135600          
-         REPLACE PTOKEN BY IDNTOK;                                      10135700          
-       REPLACE PTOK BY SZBYTESF(SZTOKEN),P FOR SZTOKEN," ";             10135800          
-       END                                                              10135900          
-     ELSE                                                               10136000          
-     IF (P IN ALPHA) THEN                                               10136100          
-       BEGIN                                                            10136200          
-       SCAN Q:P FOR N:NCC WHILE IN ALFABASE;                            10136300          
-       SZTOKEN := NCC - N;                                              10136400          
-       NCC     := N;                                                    10136500          
-       REPLACE PTOKEN                                                   10136600          
-            BY IDNTOK,SZBYTESF(SZTOKEN),                                10136700          
-               P FOR SZTOKEN WITH lower2UPPER," ";                      10136800          
-       IF KEYWORD (TYPETOK) THEN                                        10136900          
-         REPLACE PTOKEN BY SZTYPETOKF (TYPETOK);                        10137000          
-       END                                                              10137100          
-     ELSE                                                               10137200          
-     IF (P = """) THEN                                                  10137300          
-       BEGIN                                                            10137400          
-       SCAN Q:P+1 FOR N:9999 UNTIL IN FINSTRING;                        10137500          
-       SZTOKEN := 9999 - N;                                             10137600          
-       NCC :=* - SZTOKEN - 2;                                           10137700          
-       Q :=* + 1;                                                       10137800          
-       IF (Q-1 NEQ """) THEN                                            10137900          
-         RETURN("FALTA COMILLA DERECHA");                               10138000          
-       IF (SZTOKEN = 0) THEN                                            10138100          
-         RETURN("LITERAL VACIO");                                       10138200          
-       IF (SZTOKEN > MAXLARGOSTRING) THEN                               10138300          
-         RETURN("STRING MUY LARGO");                                    10138400          
-       REPLACE PTOKEN BY STRTOK,SZBYTESF(SZTOKEN),P+1 FOR SZTOKEN," ";  10138500          
-       END                                                              10138600          
-     ELSE                                                               10138700          
-       BEGIN                                                            10138800          
-       IF (P = "<" AND P+1 = ">") OR                                    10138900          
-          (P = "<" AND P+1 = "=") OR                                    10139000          
-          (P = ">" AND P+1 = "=") OR                                    10139100          
-          (P = ":" AND P+1 = "=") OR                                    10139200          
-          (P = "^" AND P+1 = "=") OR                                    10139300          
-          (P = "=" AND P+1 = "=") THEN                                  10139400          
-         SZTOKEN := 2                                                   10139500          
-       ELSE                                                             10139600          
-         SZTOKEN := 1;                                                  10139700          
-       REPLACE PTOKEN BY CHRTOK,SZBYTESF(SZTOKEN),Q:P FOR SZTOKEN;      10139800          
-       NCC := * - SZTOKEN;                                              10139900          
-       END;                                                             10140000          
-    EXIT:                                                               10140100          
-     END OF NEXTTOKEN;                                                  10140200          
-                                                                        10140300          
-   PROCEDURE INICIO;                                                    10140400          
-     BEGIN                                                              10140500          
-                                                                        10140600          
-  %  syntaxErrors   := TRUE; % Para detectar falta de instrucciones     10140700          
-     IF syntaxOnly THEN                                                 10140800          
-       VGR_SYNTAX := 1;                                                 10140900          
-     withTerminal   := IF (MYSELF.ORGUNIT.[15:1] = 1) AND               10141000          
-                          (MYSELF.STATION NEQ 0) THEN                   10141100          
-                         TERM.AVAILABLE = 1                             10141200          
-                       ELSE                                             10141300          
-                         FALSE;                                         10141400          
-     VGR_SIZE       := CGR_SIZEINICIAL;                                 10141500          
-     VGR_FIRSTAVAIL := CGR_FIRSTAVAILINICIAL;                           10141600          
-     VNS_SIZE       := CNS_SIZEINICIAL;                                 10141700          
-     VNS_FIRSTAVAIL := CNS_FIRSTAVAILINICIAL;                           10141800          
-     WFRECORD       := -1;                                              10141900          
-     showCard       := TRUE;                                            10142000          
-     Q              := IB;                                              10142100          
-     IDATA          := 0;                                               10142200          
-     NIDATA         := 0;                                               10142300          
-     MAXIDATA       := SIZE (EDATA) - 1;                                10142400          
-     GET_INXNEST;                                                       10142500          
-     VNS_LASTSEQ [INXNEST] := MAXSEQ;                                   10142600          
-     IF NOT (CFILE.OPEN) THEN                                           10142700          
-       BEGIN                                                            10142800          
-       CFILE.FILETYPE  := 7;                                            10142900          
-       IF OPEN (CFILE, AVAILABLE) ^= 1 THEN;                            10143000          
-       END;                                                             10143100          
-     IF CFILE.OPEN THEN                                                 10143200          
-       BEGIN                                                            10143300          
-       CARDRECSIZE := IF CFILE.FRAMESIZE=8 THEN                         10143400          
-                        CFILE.MAXRECSIZE                                10143500          
-                      ELSE CFILE.MAXRECSIZE*6;                          10143600          
-       REPLACE PTOKEN BY BADTOK;                                        10143700          
-       IF withTerminal THEN                                             10143800          
-         SENDTERM ("Leyendo CFILE");                                    10143900          
-       LEECARD;                                                         10144000          
-       END                                                              10144100          
-     ELSE                                                               10144200          
-       BEGIN                                                            10144300          
-       REPLACE IB BY POINTER(PARAM) UNTIL = 48"00",48"00";              10144400          
-       SCAN Q:IB FOR SIZE(IB) UNTIL = 48"00";                           10144500          
-       iText := 0;                                                      10144600          
-       lText := NCC := OFFSET(Q);                                       10144700          
-       iSeq := 0;                                                       10144800          
-       lSeq := 0;                                                       10144900          
-       iMarkid := 0;                                                    10145000          
-       lMarkid := 0;                                                    10145100          
-       SEQ := 0;                                                        10145200          
-       linePrinted := lineEnterm := FALSE;                              10145300          
-       IF (VGR_LIST = 1) THEN                                           10145400          
-         printLine;                                                     10145500          
-       Q := IB[iText];                                                  10145600          
-       paramOnly := TRUE;                                               10145700          
-       END;                                                             10145800          
-     REPLACE dummy BY ERRORS.TITLE;                                     10145900          
-     IF dummy ^= "ERRORS." THEN                                         10146000          
-       printErrors := TRUE;                                             10146100          
-     END OF INICIO;                                                     10146200          
-                                                                        10146300          
-   PROCEDURE PROCESO;                                                   10146400          
-     BEGIN                                                              10146500          
-     INTEGER                                                            10146600          
-       inxDS                                                            10146700          
-      ;                                                                 10146800          
-                                                                        10146900          
-     procedureName := syntaxErrors;                                     10147000          
-     syntaxOnly := (VGR_SYNTAX = 1);                                    10147100          
-     IF NOT syntaxErrors AND NOT syntaxOnly THEN                        10147200          
-       BEGIN                                                            10147300          
-       IF withTerminal THEN                                             10147400          
-         SENDTERM ("Procesando Prefixed");                              10147500          
-       END;                                                             10147600          
-     END of Proceso;                                                    10147700          
- END OF NEXTTOKEN_DASDL;                                                10147800          
-                                                                        10147900          
-%-----------------------------------------------------------------------10148000          
-                                                                        10148100          
- NEXTTOKEN_DASDL                                                        10148200          
-   NT                                                                   10148300          
-  ;                                                                     10148400          
-                                                                        10148500          
- DEFINE                                                                 10148600          
-   PROCESO = NT.PROCESO #                                               10148700          
-  ,INICIO = NT.INICIO #                                                 10148800          
-  ,NEXTTOKEN = NT.NEXTTOKEN #                                           10148900          
-  ,ERROR = NT.ERROR #                                                   10149000          
-  ,SEND = NT.SEND #                                                     10149100          
-  ;                                                                     10149200          
-                                                                        10149300          
-%-----------------------------------------------------------------------10149400          
- BOOLEAN PROCEDURE KEYWORD (TYPETOK);                                   10149500          
-  REAL  TYPETOK;                                                        10149600          
-  BEGIN                                                                 10149700          
-  REAL         IMIN, IMAX, I, INX;                                      10149800          
-  IMAX := KWINXMAX;                                                     10149900          
-  DO   BEGIN                                                            10150000          
-    I   := (IMIN + IMAX) DIV 2;                                         10150100          
-    INX := I * KWENTRYSIZE;                                             10150200          
-    IF (PTOK = POINTER(TABKEYWORD[INX+TKWTOKEN])                        10150300          
-               FOR SZBYTES+SZTOKEN)                                     10150400          
-    THEN BEGIN                                                          10150500          
-         KEYWORD := TRUE;                                               10150600          
-         TYPETOK := TABKEYWORD [INX+TKWTYPETOK];                        10150700          
-         IMIN    := IMAX + 1;                                           10150800          
-         END                                                            10150900          
-    ELSE IF (PTOK < POINTER(TABKEYWORD [INX+TKWTOKEN])                  10151000          
-                    FOR SZBYTES+SZTOKEN)                                10151100          
-    THEN IMAX := I - 1                                                  10151200          
-    ELSE IMIN := I + 1;                                                 10151300          
-    END                                                                 10151400          
-  UNTIL (IMIN > IMAX);                                                  10151500          
- END OF KEYWORD;                                                        10151600          
- REAL PROCEDURE ESCAPE;                                                 10151700          
- BEGIN                                                                  10151800          
-   LABEL   EXIT;                                                        10151900          
-   REAL    INX, INITIAL_IESCSTACK;                                      10152000          
-   IF (IESCSTACK < 0) THEN GO TO EXIT;                                  10152100          
-   INITIAL_IESCSTACK := IESCSTACK;                                      10152200          
-   WHILE (PTOKEN NEQ ETXTOK)                                            10152300          
-   DO   BEGIN                                                           10152400          
-        WHILE (IESCSTACK >= 0)                                          10152500          
-        DO   BEGIN                                                      10152600          
-             INX := ESCSTACK [IESCSTACK];                               10152700          
-             CASE INX                                                   10152800          
-             OF   BEGIN                                                 10152900          
-                  CASE_ESCAPE;                                          10153000          
-             END OF CASE;                                               10153100          
-            IESCSTACK := * - 1;                                         10153200          
-            END;                                                        10153300          
-        NEXTTOKEN;                                                      10153400          
-    IESCSTACK := INITIAL_IESCSTACK;                                     10153500          
-    END;                                                                10153600          
-  INX := 0;                                                             10153700          
- EXIT:                                                                  10153800          
-  ESCAPE := INX;                                                        10153900          
- END OF ESCAPE;                                                         10154000          
-                                                                        10154100          
- REAL PROCEDURE GETPROGRAM;                                             10154200          
- BEGIN                                                                  10154300          
-                                                                        10154400          
-    LABEL        EXIT, LABA1, LABA2A1, LABA2B1;                         10154500          
-    BOOLEAN      ENTITYENTERED;                                         10154600          
-    REAL         INITIAL_IESCSTACK,                                     10154700          
-                 INXESCAPELABEL,                                        10154800          
-                 ENTITYRESULT,                                          10154900          
-                 INVOKERESULT;                                          10155000          
-    INTEGER actualLevel, len;                                           10155100          
-    ENTITYENTERED := TRUE;                                              10155200          
- LABA1:                                                                 10155300          
- LABA2A1:                                                               10155400          
-    IF (INVOKERESULT := GETLEVEL(0, actualLevel, 0, len) NEQ 0)         10155500          
-    THEN BEGIN                                                          10155600          
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2B1;             10155700          
-         RETURN (BADENTITY);                                            10155800          
-         END;                                                           10155900          
-    ENTITYENTERED := TRUE;                                              10156000          
-    GO TO LABA1;                                                        10156100          
- LABA2B1:                                                               10156200          
- EXIT:                                                                  10156300          
-    GETPROGRAM := ENTITYRESULT;                                         10156400          
- END OF GETPROGRAM;                                                     10156500          
-                                                                        10156600          
- REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               10156700          
- VALUE inxFather, prevLevel, off;                                       10156800          
- INTEGER inxFather, prevLevel,off,len;                                  10156900          
- BEGIN                                                                  10157000          
-                                                                        10157100          
-    LABEL        EXIT, LABA1, LABA2A1, LABA2A2A1, LABA2A2A2A1,          10157200          
-                 LABA2A2A2B1, LABA2B1, LABA2B2A1, LABA2B2B1, LABA2B3A1, 10157300          
-                 LABA2B3A2A1, LABA2B3A2B1, LABA2B3B1, LABA2B5, LABA2C1, 10157400          
-                 LABA2C2A1, LABA2C2A2A1, LABA2C2A2B1;                   10157500          
-    BOOLEAN      ENTITYENTERED;                                         10157600          
-    REAL         INITIAL_IESCSTACK,                                     10157700          
-                 INXESCAPELABEL,                                        10157800          
-                 ENTITYRESULT,                                          10157900          
-                 INVOKERESULT;                                          10158000          
-    INTEGER actualLevel, inx, childOff, childLen;                       10158100          
- LABA1:                                                                 10158200          
-    IF (PTOKEN NEQ NUMTOK)                                              10158300          
-    THEN BEGIN                                                          10158400          
-         IF (NOT ENTITYENTERED) THEN RETURN (ISNTENTITY);               10158500          
-         ERROR ("<NUMERO> EXPECTED");                                   10158600          
-         RETURN (BADENTITY);                                            10158700          
-         END;                                                           10158800          
-    ENTITYENTERED := TRUE;                                              10158900          
-    IF (vlToken LEQ prevLevel) THEN                                     10159000          
-      RETURN (ISNTENTITY);                                              10159100          
-    actualLevel := vlToken;                                             10159200          
-    NEXTTOKEN;                                                          10159300          
-    IF (PTOKEN NEQ IDNTOK)                                              10159400          
-    THEN BEGIN                                                          10159500          
-         ERROR ("<IDENTIFICADOR> EXPECTED");                            10159600          
-         RETURN (BADENTITY);                                            10159700          
-         END;                                                           10159800          
-    inx := getAreaTABDB(CDB_GROUPSIZE*6+szToken+1);                     10159900ADC-191112
-    REPLACE PDB_NAME(inx) BY pTok FOR szToken+szBytes;                  10160000          
-    VDB_OFFSET(inx) := off DIV 1;                                       10160100          
-    VDB_OCCURS(inx) := 1 DIV 1;                                         10160150ADC-191112
-    IF actualLevel = 1 THEN addIspec(inx)                               10160200ADC-191112
-    ELSE addChild(inxFather, inx);                                      10160300          
-    NEXTTOKEN;                                                          10160400          
- LABA2A1:                                                               10160500          
-    IF (PTOKEN NEQ CHRTOK 48"01"".") THEN GO TO LABA2B1;                10160600          
-    NEXTTOKEN;                                                          10160700          
-    childOff := 0;                                                      10160800          
- LABA2A2A1:                                                             10160900          
- LABA2A2A2A1:                                                           10161000          
-    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10161100          
-    NEQ 0)                                                              10161200          
-    THEN BEGIN                                                          10161300          
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2A2A2B1;         10161400          
-         RETURN (BADENTITY);                                            10161500          
-         END;                                                           10161600          
-    childOff :=* + childLen;                                            10161700          
-    len :=* + childLen;                                                 10161750ADC-191112
-    GO TO LABA2A2A1;                                                    10161800          
- LABA2A2A2B1:                                                           10161900          
-    GO TO EXIT;                                                         10162000          
- LABA2B1:                                                               10162100          
-    IF (PTOKEN NEQ RESTOK 48"03""PIC") THEN GO TO LABA2C1;              10162200          
-    NEXTTOKEN;                                                          10162300          
- LABA2B2A1:                                                             10162400          
-    IF (PTOKEN NEQ NUMTOK) THEN GO TO LABA2B2B1;                        10162500          
-    NEXTTOKEN;                                                          10162600          
-    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  10162700          
-    GO TO LABA2B3A1;                                                    10162800          
- LABA2B2B1:                                                             10162900          
-    IF (PTOKEN NEQ RESTOK 48"01""X")                                    10163000          
-    THEN BEGIN                                                          10163100          
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10163200          
-         SEND ("<NUMERO>");                                             10163300          
-         SEND ("X");                                                    10163400          
-         RETURN (BADENTITY);                                            10163500          
-         END;                                                           10163600          
-    NEXTTOKEN;                                                          10163700          
-    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    10163800ADC-191112
- LABA2B3A1:                                                             10163900          
-    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              10164000          
-    NEXTTOKEN;                                                          10164100          
-    IF (PTOKEN NEQ NUMTOK)                                              10164200          
-    THEN BEGIN                                                          10164300          
-         ERROR ("<NUMERO> EXPECTED");                                   10164400          
-         RETURN (BADENTITY);                                            10164500          
-         END;                                                           10164600          
-    VDB_LENGTH(inx) := vlToken DIV 1;                                   10164700          
-    NEXTTOKEN;                                                          10164800          
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10164900          
-    THEN BEGIN                                                          10165000          
-         ERROR (") EXPECTED");                                          10165100          
-         RETURN (BADENTITY);                                            10165200          
-         END;                                                           10165300          
-    NEXTTOKEN;                                                          10165400          
- LABA2B3A2A1:                                                           10165500          
-    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           10165600          
-    NEXTTOKEN;                                                          10165700          
-    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    10165800          
-    THEN BEGIN                                                          10165900          
-         ERROR ("( EXPECTED");                                          10166000          
-         RETURN (BADENTITY);                                            10166100          
-         END;                                                           10166200          
-    NEXTTOKEN;                                                          10166300          
-    IF (PTOKEN NEQ NUMTOK)                                              10166400          
-    THEN BEGIN                                                          10166500          
-         ERROR ("<NUMERO> EXPECTED");                                   10166600          
-         RETURN (BADENTITY);                                            10166700          
-         END;                                                           10166800          
-    VDB_DECIMALS(inx) := vlToken DIV 1;                                 10166900          
-    NEXTTOKEN;                                                          10167000          
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10167100          
-    THEN BEGIN                                                          10167200          
-         ERROR (") EXPECTED");                                          10167300          
-         RETURN (BADENTITY);                                            10167400          
-         END;                                                           10167500          
-    NEXTTOKEN;                                                          10167600          
-    GO TO LABA2B5;                                                      10167700          
- LABA2B3A2B1:                                                           10167800          
-    GO TO LABA2B5;                                                      10167900          
- LABA2B3B1:                                                             10168000          
- LABA2B5:                                                               10168100          
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10168200          
-    THEN BEGIN                                                          10168300          
-         ERROR (". EXPECTED");                                          10168400          
-         RETURN (BADENTITY);                                            10168500          
-         END;                                                           10168600          
-    NEXTTOKEN;                                                          10168700          
-    len := VDB_LENGTH(inx) + VDB_DECIMALS(inx);                         10168800          
-    GO TO EXIT;                                                         10168900          
- LABA2C1:                                                               10169000          
-    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               10169100          
-    THEN BEGIN                                                          10169200          
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10169300          
-         SEND (".");                                                    10169400          
-         SEND ("PIC");                                                  10169500          
-         SEND ("OCCURS");                                               10169600          
-         RETURN (BADENTITY);                                            10169700          
-         END;                                                           10169800          
-    NEXTTOKEN;                                                          10169900          
-    IF (PTOKEN NEQ NUMTOK)                                              10170000          
-    THEN BEGIN                                                          10170100          
-         ERROR ("<NUMERO> EXPECTED");                                   10170200          
-         RETURN (BADENTITY);                                            10170300          
-         END;                                                           10170400          
-    VDB_OCCURS(inx) := vlToken DIV 1;                                   10170500          
-    NEXTTOKEN;                                                          10170600          
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10170700          
-    THEN BEGIN                                                          10170800          
-         ERROR (". EXPECTED");                                          10170900          
-         RETURN (BADENTITY);                                            10171000          
-         END;                                                           10171100          
-    NEXTTOKEN;                                                          10171200          
-    childOff := 0;                                                      10171300          
- LABA2C2A1:                                                             10171400          
- LABA2C2A2A1:                                                           10171500          
-    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10171600          
-    NEQ 0)                                                              10171700          
-    THEN BEGIN                                                          10171800          
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         10171900          
-         RETURN (BADENTITY);                                            10172000          
-         END;                                                           10172100          
-    childOff :=* + childLen;                                            10172200          
-    GO TO LABA2C2A1;                                                    10172300          
- LABA2C2A2B1:                                                           10172400          
-    len := childOff * VDB_OCCURS(inx);                                  10172500          
- EXIT:                                                                  10172600          
-    GETLEVEL := ENTITYRESULT;                                           10172700          
- END OF GETLEVEL;                                                       10172800          
-                                                                        10172900          
- %----------------------------------------------------------------------10173000          
-    PTOKEN    := TOKARRAY;                                              10173100          
-    PTOK      := PTOKEN+SZTYPETOK;                                      10173200          
-    IESCSTACK := -1;                                                    10173300          
- %----------------------------------------------------------------------10173400          
-    INICIO;                                                             10173500          
-    NEXTTOKEN;                                                          10173600          
-    GETPROGRAM;                                                         10173700          
-    PROCESO;                                                            10173800          
+    DEFINE       BADTOK                  = 48"00"                #,     10018000ADC-191113
+                 IDNTOK                  = 48"01"                #,     10018200ADC-191113
+                 RESTOK                  = 48"02"                #,     10018400ADC-191113
+                 NUMTOK                  = 48"03"                #,     10018600ADC-191113
+                 STRTOK                  = 48"04"                #,     10018800ADC-191113
+                 CHRTOK                  = 48"05"                #,     10019000ADC-191113
+                 TXTTOK                  = 48"06"                #,     10019200ADC-191113
+                 EOLTOK                  = 48"07"                #,     10019400ADC-191113
+                 ETXTOK                  = 48"08"                #;     10019600ADC-191113
+                                                                        10019800ADC-191113
+    VALUE ARRAY TABKEYWORD                                              10020000ADC-191113
+         (                                                              10020200ADC-191113
+          48"01""X          ", RESTOK,                                  10020400ADC-191113
+          48"02""V9         ", RESTOK,                                  10020600ADC-191113
+          48"03""PIC        ", RESTOK,                                  10020800ADC-191113
+          48"06""OCCURS     ", RESTOK,                                  10021000ADC-191113
+          5(0)                                                          10021200ADC-191113
+         );                                                             10021400ADC-191113
+                                                                        10021600ADC-191113
+    DEFINE       MAXESCSTACK    = 50 #;                                 10021800ADC-191113
+    DEFINE        KWENTRYSIZE            = 3                     #,     10022000ADC-191113
+                  KWINXMAX               = 4                     #,     10022200ADC-191113
+                 TKWTOKEN                = 0                     #,     10022400ADC-191113
+                 TKWTOKENLENGTH          = 0].[47:SZBITS         #,     10022600ADC-191113
+                 TKWTYPETOK              = 2                     #;     10022800ADC-191113
+                                                                        10023000ADC-191113
+    DEFINE CASE_ESCAPE =                                                10023200ADC-191113
+           #;                                                           10023400ADC-191113
+ %----------------------------------------------------------------------10023600ADC-191113
+    DEFINE     SZBYTES                 = 1                     #,       10023800ADC-191113
+               SZBITS1                 = 7                     #,       10024000ADC-191113
+               SZBITS                  = 8                     #,       10024200ADC-191113
+               SZTYPETOK               = 1                     #,       10024400ADC-191113
+               SZBYTESF(SZ)            = ((SZ) DIV 1).[7:48] FOR 1 #,   10024600ADC-191113
+               SZTYPETOKF (SZ)         = ((SZ) DIV 1).[7:48] FOR 1 #,   10024800ADC-191113
+               BADENTITY               = 1                     #,       10025000ADC-191113
+               ISNTENTITY              = 2                     #;       10025200ADC-191113
+    DEFINE RETURN (RESULT) =                                            10025400ADC-191113
+        BEGIN                                                           10025600ADC-191113
+        ENTITYRESULT := RESULT;                                         10025800ADC-191113
+        GO TO EXIT;                                                     10026000ADC-191113
+        END OF RETURN #;                                                10026200ADC-191113
+    ARRAY        ESCSTACK [0:MAXESCSTACK];                              10026400ADC-191113
+    POINTER      PTOKEN,                                                10026600ADC-191113
+                 PTOK;                                                  10026800ADC-191113
+    REAL         SZTOKEN,                                               10027000ADC-191113
+                 IESCSTACK;                                             10027200ADC-191113
+ %PROCEDURE NEXTTOKEN; FORWARD;                                         10027400ADC-191113
+ %PROCEDURE ERROR (MSG); VALUE MSG; STRING MSG; FORWARD;                10027600ADC-191113
+ %PROCEDURE SEND  (MSG); VALUE MSG; STRING MSG; FORWARD;                10027800ADC-191113
+ BOOLEAN PROCEDURE KEYWORD (TYPETOK);REAL TYPETOK; FORWARD;             10028000ADC-191113
+ REAL PROCEDURE ESCAPE; FORWARD;                                        10028200ADC-191113
+ %----------------------------------------------------------------------10028400ADC-191113
+ REAL PROCEDURE GETPROGRAM;                                             10028600ADC-191113
+ FORWARD;                                       %%----00500100          10028800ADC-191113
+ REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               10029000ADC-191113
+ VALUE inxFather, prevLevel, off;                                       10029200ADC-191113
+ INTEGER inxFather, prevLevel,off,len;                                  10029400ADC-191113
+ FORWARD;                                       %%----00502600          10029600ADC-191113
+%$INCLUDE NXTK_FROMDASDL                                                10029800ADC-191113
+ %----------------------------------------------------------------------1003000001.001.001
+ ARRAY                                                                  1003020001.001.001
+   TOKARRAY [0:60]                                                      1003040001.001.001
+  ;                                                                     1003060001.001.001
+ REAL                                                                   10030800ADC-180810
+   VLTOKEN                                                              10031000ADC-180810
+  ;                                                                     10031200ADC-180810
+                                                                        10031400ADC-180810
+$INCLUDE "LINCOFF2MDB/SYMBOL/NEXTTOKEN/BASE"                            10031600ADC-191113
+                                                                        10031800ADC-180810
+ NEXTTOKEN_DASDL                                                        10032000ADC-180813
+   NT                                                                   10032200ADC-180810
+  ;                                                                     10032400ADC-180810
+                                                                        10032600ADC-180810
+ DEFINE                                                                 10032800ADC-180810
+   PROCESO = NT.PROCESO #                                               10033000ADC-180920
+  ,INICIO = NT.INICIO #                                                 10033200ADC-180920
+  ,NEXTTOKEN = NT.NEXTTOKEN #                                           10033400ADC-180810
+  ,ERROR = NT.ERROR #                                                   10033600ADC-180810
+  ,SEND = NT.SEND #                                                     10033800ADC-180810
+  ;                                                                     10034000ADC-180810
+                                                                        10034200ADC-180810
+%-----------------------------------------------------------------------1003440001.001.001
+ BOOLEAN PROCEDURE KEYWORD (TYPETOK);                                   10034600ADC-191113
+  REAL  TYPETOK;                                                        10034800ADC-191113
+  BEGIN                                                                 10035000ADC-191113
+  REAL         IMIN, IMAX, I, INX;                                      10035200ADC-191113
+  IMAX := KWINXMAX;                                                     10035400ADC-191113
+  DO   BEGIN                                                            10035600ADC-191113
+    I   := (IMIN + IMAX) DIV 2;                                         10035800ADC-191113
+    INX := I * KWENTRYSIZE;                                             10036000ADC-191113
+    IF (PTOK = POINTER(TABKEYWORD[INX+TKWTOKEN])                        10036200ADC-191113
+               FOR SZBYTES+SZTOKEN)                                     10036400ADC-191113
+    THEN BEGIN                                                          10036600ADC-191113
+         KEYWORD := TRUE;                                               10036800ADC-191113
+         TYPETOK := TABKEYWORD [INX+TKWTYPETOK];                        10037000ADC-191113
+         IMIN    := IMAX + 1;                                           10037200ADC-191113
+         END                                                            10037400ADC-191113
+    ELSE IF (PTOK < POINTER(TABKEYWORD [INX+TKWTOKEN])                  10037600ADC-191113
+                    FOR SZBYTES+SZTOKEN)                                10037800ADC-191113
+    THEN IMAX := I - 1                                                  10038000ADC-191113
+    ELSE IMIN := I + 1;                                                 10038200ADC-191113
+    END                                                                 10038400ADC-191113
+  UNTIL (IMIN > IMAX);                                                  10038600ADC-191113
+ END OF KEYWORD;                                                        10038800ADC-191113
+ REAL PROCEDURE ESCAPE;                                                 10039000ADC-191113
+ BEGIN                                                                  10039200ADC-191113
+   LABEL   EXIT;                                                        10039400ADC-191113
+   REAL    INX, INITIAL_IESCSTACK;                                      10039600ADC-191113
+   IF (IESCSTACK < 0) THEN GO TO EXIT;                                  10039800ADC-191113
+   INITIAL_IESCSTACK := IESCSTACK;                                      10040000ADC-191113
+   WHILE (PTOKEN NEQ ETXTOK)                                            10040200ADC-191113
+   DO   BEGIN                                                           10040400ADC-191113
+        WHILE (IESCSTACK >= 0)                                          10040600ADC-191113
+        DO   BEGIN                                                      10040800ADC-191113
+             INX := ESCSTACK [IESCSTACK];                               10041000ADC-191113
+             CASE INX                                                   10041200ADC-191113
+             OF   BEGIN                                                 10041400ADC-191113
+                  CASE_ESCAPE;                                          10041600ADC-191113
+             END OF CASE;                                               10041800ADC-191113
+            IESCSTACK := * - 1;                                         10042000ADC-191113
+            END;                                                        10042200ADC-191113
+        NEXTTOKEN;                                                      10042400ADC-191113
+    IESCSTACK := INITIAL_IESCSTACK;                                     10042600ADC-191113
+    END;                                                                10042800ADC-191113
+  INX := 0;                                                             10043000ADC-191113
+ EXIT:                                                                  10043200ADC-191113
+  ESCAPE := INX;                                                        10043400ADC-191113
+ END OF ESCAPE;                                                         10043600ADC-191113
+                                                                        10043800ADC-191113
+ REAL PROCEDURE GETPROGRAM;                                             10044000ADC-191113
+ BEGIN                                                                  10044200ADC-191113
+                                                                        10044400ADC-191113
+    LABEL        EXIT, LABA1, LABA2A1, LABA2B1;                         10044600ADC-191113
+    BOOLEAN      ENTITYENTERED;                                         10044800ADC-191113
+    REAL         INITIAL_IESCSTACK,                                     10045000ADC-191113
+                 INXESCAPELABEL,                                        10045200ADC-191113
+                 ENTITYRESULT,                                          10045400ADC-191113
+                 INVOKERESULT;                                          10045600ADC-191113
+    INTEGER actualLevel, len;                                           10045800ADC-191113
+    ENTITYENTERED := TRUE;                                              10046000ADC-191113
+ LABA1:                                                                 10046200ADC-191113
+ LABA2A1:                                                               10046400ADC-191113
+    IF (INVOKERESULT := GETLEVEL(0, actualLevel, 0, len) NEQ 0)         10046600ADC-191113
+    THEN BEGIN                                                          10046800ADC-191113
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2B1;             10047000ADC-191113
+         RETURN (BADENTITY);                                            10047200ADC-191113
+         END;                                                           10047400ADC-191113
+    ENTITYENTERED := TRUE;                                              10047600ADC-191113
+    GO TO LABA1;                                                        10047800ADC-191113
+ LABA2B1:                                                               10048000ADC-191113
+ EXIT:                                                                  10048200ADC-191113
+    GETPROGRAM := ENTITYRESULT;                                         10048400ADC-191113
+ END OF GETPROGRAM;                                                     10048600ADC-191113
+                                                                        10048800ADC-191113
+ REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               10049000ADC-191113
+ VALUE inxFather, prevLevel, off;                                       10049200ADC-191113
+ INTEGER inxFather, prevLevel,off,len;                                  10049400ADC-191113
+ BEGIN                                                                  10049600ADC-191113
+                                                                        10049800ADC-191113
+    LABEL        EXIT, LABA1, LABA2A1, LABA2A2A1, LABA2A2A2A1,          10050000ADC-191113
+                 LABA2A2A2B1, LABA2B1, LABA2B2A1, LABA2B2B1, LABA2B3A1, 10050200ADC-191113
+                 LABA2B3A2A1, LABA2B3A2B1, LABA2B3B1, LABA2B5, LABA2C1, 10050400ADC-191113
+                 LABA2C2A1, LABA2C2A2A1, LABA2C2A2B1;                   10050600ADC-191113
+    BOOLEAN      ENTITYENTERED;                                         10050800ADC-191113
+    REAL         INITIAL_IESCSTACK,                                     10051000ADC-191113
+                 INXESCAPELABEL,                                        10051200ADC-191113
+                 ENTITYRESULT,                                          10051400ADC-191113
+                 INVOKERESULT;                                          10051600ADC-191113
+    INTEGER actualLevel, inx, childOff, childLen;                       10051800ADC-191113
+ LABA1:                                                                 10052000ADC-191113
+    IF (PTOKEN NEQ NUMTOK)                                              10052200ADC-191113
+    THEN BEGIN                                                          10052400ADC-191113
+         IF (NOT ENTITYENTERED) THEN RETURN (ISNTENTITY);               10052600ADC-191113
+         ERROR ("<NUMERO> EXPECTED");                                   10052800ADC-191113
+         RETURN (BADENTITY);                                            10053000ADC-191113
+         END;                                                           10053200ADC-191113
+    ENTITYENTERED := TRUE;                                              10053400ADC-191113
+    IF (vlToken LEQ prevLevel) THEN                                     10053600ADC-191113
+      RETURN (ISNTENTITY);                                              10053800ADC-191113
+    actualLevel := vlToken;                                             10054000ADC-191113
+    NEXTTOKEN;                                                          10054200ADC-191113
+    IF (PTOKEN NEQ IDNTOK)                                              10054400ADC-191113
+    THEN BEGIN                                                          10054600ADC-191113
+         ERROR ("<IDENTIFICADOR> EXPECTED");                            10054800ADC-191113
+         RETURN (BADENTITY);                                            10055000ADC-191113
+         END;                                                           10055200ADC-191113
+    inx := getAreaTABDB(CDB_GROUPSIZE*6+szToken+1);                     10055400ADC-191113
+    REPLACE PDB_NAME(inx) BY pTok FOR szToken+szBytes;                  10055600ADC-191113
+    VDB_OFFSET(inx) := off DIV 1;                                       10055800ADC-191113
+    VDB_OCCURS(inx) := 1 DIV 1;                                         10056000ADC-191113
+    IF actualLevel = 1 THEN addIspec(inx)                               10056200ADC-191113
+    ELSE addChild(inxFather, inx);                                      10056400ADC-191113
+    NEXTTOKEN;                                                          10056600ADC-191113
+ LABA2A1:                                                               10056800ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01"".") THEN GO TO LABA2B1;                10057000ADC-191113
+    NEXTTOKEN;                                                          10057200ADC-191113
+    childOff := 0;                                                      10057400ADC-191113
+ LABA2A2A1:                                                             10057600ADC-191113
+    childLen := 0;                                                      10057800ADC-191113
+ LABA2A2A2A1:                                                           10058000ADC-191113
+    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10058200ADC-191113
+    NEQ 0)                                                              10058400ADC-191113
+    THEN BEGIN                                                          10058600ADC-191113
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2A2A2B1;         10058800ADC-191113
+         RETURN (BADENTITY);                                            10059000ADC-191113
+         END;                                                           10059200ADC-191113
+    childOff :=* + childLen;                                            10059400ADC-191113
+    len :=* + childLen;                                                 10059600ADC-191113
+    VDB_LENGTH(inx) := len DIV 1;                                       10059800ADC-191113
+    GO TO LABA2A2A1;                                                    10060000ADC-191113
+ LABA2A2A2B1:                                                           10060200ADC-191113
+    GO TO EXIT;                                                         10060400ADC-191113
+ LABA2B1:                                                               10060600ADC-191113
+    IF (PTOKEN NEQ RESTOK 48"03""PIC") THEN GO TO LABA2C1;              10060800ADC-191113
+    NEXTTOKEN;                                                          10061000ADC-191113
+    VDB_LENGTH(inx) := 1; %Por default                                  10061200ADC-191113
+ LABA2B2A1:                                                             10061400ADC-191113
+    IF (PTOKEN NEQ NUMTOK) THEN GO TO LABA2B2B1;                        10061600ADC-191113
+    NEXTTOKEN;                                                          10061800ADC-191113
+    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  10062000ADC-191113
+    GO TO LABA2B3A1;                                                    10062200ADC-191113
+ LABA2B2B1:                                                             10062400ADC-191113
+    IF (PTOKEN NEQ RESTOK 48"01""X")                                    10062600ADC-191113
+    THEN BEGIN                                                          10062800ADC-191113
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10063000ADC-191113
+         SEND ("<NUMERO>");                                             10063200ADC-191113
+         SEND ("X");                                                    10063400ADC-191113
+         RETURN (BADENTITY);                                            10063600ADC-191113
+         END;                                                           10063800ADC-191113
+    NEXTTOKEN;                                                          10064000ADC-191113
+    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    10064200ADC-191113
+ LABA2B3A1:                                                             10064400ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              10064600ADC-191113
+    NEXTTOKEN;                                                          10064800ADC-191113
+    IF (PTOKEN NEQ NUMTOK)                                              10065000ADC-191113
+    THEN BEGIN                                                          10065200ADC-191113
+         ERROR ("<NUMERO> EXPECTED");                                   10065400ADC-191113
+         RETURN (BADENTITY);                                            10065600ADC-191113
+         END;                                                           10065800ADC-191113
+    VDB_LENGTH(inx) := vlToken DIV 1;                                   10066000ADC-191113
+    NEXTTOKEN;                                                          10066200ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10066400ADC-191113
+    THEN BEGIN                                                          10066600ADC-191113
+         ERROR (") EXPECTED");                                          10066800ADC-191113
+         RETURN (BADENTITY);                                            10067000ADC-191113
+         END;                                                           10067200ADC-191113
+    NEXTTOKEN;                                                          10067400ADC-191113
+ LABA2B3A2A1:                                                           10067600ADC-191113
+    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           10067800ADC-191113
+    NEXTTOKEN;                                                          10068000ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    10068200ADC-191113
+    THEN BEGIN                                                          10068400ADC-191113
+         ERROR ("( EXPECTED");                                          10068600ADC-191113
+         RETURN (BADENTITY);                                            10068800ADC-191113
+         END;                                                           10069000ADC-191113
+    NEXTTOKEN;                                                          10069200ADC-191113
+    IF (PTOKEN NEQ NUMTOK)                                              10069400ADC-191113
+    THEN BEGIN                                                          10069600ADC-191113
+         ERROR ("<NUMERO> EXPECTED");                                   10069800ADC-191113
+         RETURN (BADENTITY);                                            10070000ADC-191113
+         END;                                                           10070200ADC-191113
+    VDB_DECIMALS(inx) := vlToken DIV 1;                                 10070400ADC-191113
+    NEXTTOKEN;                                                          10070600ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10070800ADC-191113
+    THEN BEGIN                                                          10071000ADC-191113
+         ERROR (") EXPECTED");                                          10071200ADC-191113
+         RETURN (BADENTITY);                                            10071400ADC-191113
+         END;                                                           10071600ADC-191113
+    NEXTTOKEN;                                                          10071800ADC-191113
+    GO TO LABA2B5;                                                      10072000ADC-191113
+ LABA2B3A2B1:                                                           10072200ADC-191113
+    GO TO LABA2B5;                                                      10072400ADC-191113
+ LABA2B3B1:                                                             10072600ADC-191113
+ LABA2B5:                                                               10072800ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10073000ADC-191113
+    THEN BEGIN                                                          10073200ADC-191113
+         ERROR (". EXPECTED");                                          10073400ADC-191113
+         RETURN (BADENTITY);                                            10073600ADC-191113
+         END;                                                           10073800ADC-191113
+    NEXTTOKEN;                                                          10074000ADC-191113
+    len := VDB_LENGTH(inx) + VDB_DECIMALS(inx);                         10074200ADC-191113
+    GO TO EXIT;                                                         10074400ADC-191113
+ LABA2C1:                                                               10074600ADC-191113
+    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               10074800ADC-191113
+    THEN BEGIN                                                          10075000ADC-191113
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10075200ADC-191113
+         SEND (".");                                                    10075400ADC-191113
+         SEND ("PIC");                                                  10075600ADC-191113
+         SEND ("OCCURS");                                               10075800ADC-191113
+         RETURN (BADENTITY);                                            10076000ADC-191113
+         END;                                                           10076200ADC-191113
+    NEXTTOKEN;                                                          10076400ADC-191113
+    IF (PTOKEN NEQ NUMTOK)                                              10076600ADC-191113
+    THEN BEGIN                                                          10076800ADC-191113
+         ERROR ("<NUMERO> EXPECTED");                                   10077000ADC-191113
+         RETURN (BADENTITY);                                            10077200ADC-191113
+         END;                                                           10077400ADC-191113
+    VDB_OCCURS(inx) := vlToken DIV 1;                                   10077600ADC-191113
+    NEXTTOKEN;                                                          10077800ADC-191113
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10078000ADC-191113
+    THEN BEGIN                                                          10078200ADC-191113
+         ERROR (". EXPECTED");                                          10078400ADC-191113
+         RETURN (BADENTITY);                                            10078600ADC-191113
+         END;                                                           10078800ADC-191113
+    NEXTTOKEN;                                                          10079000ADC-191113
+    childOff := 0;                                                      10079200ADC-191113
+ LABA2C2A1:                                                             10079400ADC-191113
+    childLen := 0;                                                      10079600ADC-191113
+ LABA2C2A2A1:                                                           10079800ADC-191113
+    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10080000ADC-191113
+    NEQ 0)                                                              10080200ADC-191113
+    THEN BEGIN                                                          10080400ADC-191113
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         10080600ADC-191113
+         RETURN (BADENTITY);                                            10080800ADC-191113
+         END;                                                           10081000ADC-191113
+    childOff :=* + childLen;                                            10081200ADC-191113
+    GO TO LABA2C2A1;                                                    10081400ADC-191113
+ LABA2C2A2B1:                                                           10081600ADC-191113
+    len := childOff * VDB_OCCURS(inx);                                  10081800ADC-191113
+    VDB_LENGTH(inx) := len DIV 1;                                       10082000ADC-191113
+ EXIT:                                                                  10082200ADC-191113
+    GETLEVEL := ENTITYRESULT;                                           10082400ADC-191113
+ END OF GETLEVEL;                                                       10082600ADC-191113
+                                                                        10082800ADC-191113
+ %----------------------------------------------------------------------10083000ADC-191113
+    PTOKEN    := TOKARRAY;                                              10083200ADC-191113
+    PTOK      := PTOKEN+SZTYPETOK;                                      10083400ADC-191113
+    IESCSTACK := -1;                                                    10083600ADC-191113
+ %----------------------------------------------------------------------10083800ADC-191113
+    INICIO;                                                             10084000ADC-191113
+    NEXTTOKEN;                                                          10084200ADC-191113
+    GETPROGRAM;                                                         10084400ADC-191113
+    PROCESO;                                                            10084600ADC-191113
  END of getLINCOFF;                                                     10173900          
                                                                         10174000          
+ PROCEDURE dumpGroup(inx);                                              10174002ADC-191113
+   VALUE             inx;                                               10174004ADC-191113
+   INTEGER           inx;                                               10174006ADC-191113
+   BEGIN                                                                10174008ADC-191113
+   INTEGER                                                              10174010ADC-191113
+     inxChild                                                           10174012ADC-191113
+    ;                                                                   10174014ADC-191113
+   POINTER                                                              10174016ADC-191113
+     p                                                                  10174018ADC-191113
+    ;                                                                   10174020ADC-191113
+   PROCEDURE printItem(inxg);                                           10174022ADC-191113
+     VALUE             inxg;                                            10174024ADC-191113
+     INTEGER           inxg;                                            10174026ADC-191113
+     BEGIN                                                              10174028ADC-191113
+                                                                        10174030ADC-191113
+     REPLACE p:dummy                                                    10174032ADC-191113
+          BY PDB_NAME(inxg)+szBytes                                     10174034ADC-191113
+              FOR REAL(PDB_NAME(inxg),1), " " FOR 20;                   10174036ADC-191113
+     REPLACE p:dummy[20]                                                10174038ADC-191113
+          BY VDB_OFFSET(inxg) FOR 4 DIGITS, "|",                        10174040ADC-191113
+             VDB_OCCURS(inxg) FOR 2 DIGITS, "|",                        10174042ADC-191113
+             VDB_LENGTH(inxg) FOR 4 DIGITS, "|",                        10174044ADC-191113
+             VDB_DECIMALS(inxg) FOR 2 DIGITS, "|",                      10174046ADC-191113
+             "N"FOR REAL(VDB_PIC(inxg)=CDB_NUMERIC).[0:1],              10174048ADC-191113
+             "A"FOR REAL(VDB_PIC(inxg)=CDB_ALPHA).[0:1];                10174050ADC-191113
+     WRITE(line, 132, dummy);                                           10174052ADC-191113
+     END of printItem;                                                  10174054ADC-191113
+                                                                        10174056ADC-191113
+   inxChild := VDB_FIRSTITEM(inx);                                      10174058ADC-191113
+   WHILE inxChild ^= NIL DO                                             10174060ADC-191113
+     BEGIN                                                              10174062ADC-191113
+     printItem(inxChild);                                               10174064ADC-191113
+     IF VDB_PIC(inxChild) = CDB_GROUP THEN                              10174066ADC-191113
+       dumpGroup(inxChild);                                             10174068ADC-191113
+     inxChild := VDB_NEXTGROUP(inxChild);                               10174070ADC-191113
+     END;                                                               10174072ADC-191113
+   END of dumpGroup;                                                    10174074ADC-191113
+                                                                        10174076ADC-191113
  PROCEDURE printGroup(inx, off, len);                                   10174100ADC-191112
    VALUE              inx, off, len;                                    10174200ADC-191112
    INTEGER            inx, off, len;                                    10174300ADC-191112
@@ -1758,7 +568,8 @@ $VERSION 01.001.001                                                     10000200
    WHILE inxChild ^= NIL DO                                             10175300          
      BEGIN                                                              10175400          
      IF VDB_PIC(inxChild) = CDB_GROUP THEN                              10175500          
-       printGroup(inxChild, off, VDB_LENGTH(inxChild))                  10175600ADC-191112
+       printGroup(inxChild, off+VDB_OFFSET(inxChild),                   10175600ADC-191113
+                  VDB_LENGTH(inxChild))                                 10175650ADC-191113
      ELSE                                                               10175700          
        BEGIN                                                            10175800          
        IF PDB_NAME(inxChild) ^= 48"06""FILLER" AND                      10175810ADC-191112
@@ -1777,7 +588,9 @@ $VERSION 01.001.001                                                     10000200
                     FOR (REAL(PDB_NAME(inxChild),1)-5)," " FOR 10;      10176150ADC-191112
            REPLACE p:dummy[16]                                          10176160ADC-191112
                 BY "|",(i+1)FOR 2 DIGITS,                               10176200ADC-191112
-                   "|",((VDB_OFFSET(inxChild)-150)+i*len) FOR 4 DIGITS, 10176300ADC-191112
+                   "|",(off+VDB_OFFSET(inxChild)                        10176300ADC-191113
+                         +i*VDB_LENGTH(inx)/VDB_OCCURS(inx)-151)        10176350ADC-191113
+                          FOR 4 DIGITS,                                 10176360ADC-191113
                    "|",VDB_LENGTH(inxChild) FOR 2 DIGITS,               10176400ADC-191112
                    "|",VDB_DECIMALS(inxChild) FOR 2 DIGITS,             10176500ADC-191112
                    "|","N"FOR REAL(VDB_PIC(inxChild)=CDB_NUMERIC).[0:1],10176600ADC-191112
@@ -1811,7 +624,15 @@ $VERSION 01.001.001                                                     10000200
    END;                                                                 10178350ADC-191113
                                                                         10178400          
  getLINCOFF;                                                            10178500          
-                                                                        10178600          
+                                                                        10178600ADC-191113
+ REPLACE dummy BY " " FOR 132;                                          10178610ADC-191113
+ inx := VDB_FIRSTISPEC;                                                 10178620ADC-191113
+ WHILE inx ^= NIL DO                                                    10178630ADC-191113
+   BEGIN                                                                10178640ADC-191113
+%  dumpGroup(inx);                                                      10178650ADC-191113
+   inx := VDB_NEXTGROUP(inx);                                           10178660ADC-191113
+   END;                                                                 10178670ADC-191113
+                                                                        10178680ADC-191113
  inx := VDB_FIRSTISPEC;                                                 10178700          
  WHILE inx ^= NIL DO                                                    10178800          
    BEGIN                                                                10178900          
