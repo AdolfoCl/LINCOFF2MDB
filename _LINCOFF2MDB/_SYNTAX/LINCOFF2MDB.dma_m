@@ -12,7 +12,7 @@ $SET TEXTCOL 5                                                          10000000
                       EOLTOK    "<END OF LINE>"                  ,      1000110001.001.001
                       ETXTOK    "<FIN DE TEXTO>"                 ;      1000120001.001.001
                                                                         1000130001.001.001
-        GLOBALS: @2 '$INCLUDE NXTK_FROMDASDL  ';                        10001400ADC-181220
+        GLOBALS: @2 '$INCLUDE "LINCOFF2MDB/SYMBOL/NEXTTOKEN/FROMFILE" ';10001400ADC-191114
         INITIAL: @5 'INICIO;  ';                                        1000150001.001.001
         FINAL  : @5 'PROCESO; '.                                        1000160001.001.001
                                                                         1000170001.001.001
@@ -78,7 +78,10 @@ $SET TEXTCOL 5                                                          10000000
                                                                         10006500ADC-191108
  #A2B3A:  "("; NUMTOK, 'VDB_LENGTH(inx) := vlToken DIV 1;'; ")".        10006600ADC-191111
                                                                         10006700ADC-191108
- #A2B3A2A: "V9"; "("; NUMTOK, 'VDB_DECIMALS(inx) := vlToken DIV 1;';    10006800ADC-191111
+ #A2B3A2A: "V9"; "(";                                                   10006800ADC-191114
+                 NUMTOK,                                                10006810ADC-191114
+                 'VDB_DECIMALS(inx) := vlToken DIV 1;                 ' 10006820ADC-191114
+                 'VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;  ';10006830ADC-191114
                  ")".                                                   10006850ADC-191111
                                                                         10006900ADC-191108
  #A2B3A2B: EMPTY.                                                       10007000ADC-191111
@@ -87,7 +90,7 @@ $SET TEXTCOL 5                                                          10000000
                                                                         10007100ADC-191108
  #A2B5:  ".";                                                           10007200ADC-191111
                                                                         10007220ADC-191111
-         'len := VDB_LENGTH(inx) + VDB_DECIMALS(inx);                 '.10007240ADC-191111
+         'len := VDB_LENGTH(inx);                                     '.10007240ADC-191114
                                                                         10007300ADC-191108
  #A2C:   "OCCURS";  NUMTOK, 'VDB_OCCURS(inx) := vlToken DIV 1;';  ".";  10008000ADC-191111
                                                                         10008050ADC-191111
