@@ -75,8 +75,15 @@ $SET TEXTCOL 5                                                          10000000
  #A2B2A: NUMTOK; 'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  '.10006200ADC-191113
                                                                         10006300ADC-191108
  #A2B2B: "X";    'VDB_PIC(inx) := CDB_ALPHA DIV 1;                    '.10006400ADC-191113
+                                                                        10006420ADC-191115
+ #A2B2C: "S9";   'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  ' 10006440ADC-191115
+                 'VDB_SIGN(inx):= 1 DIV 1;                            '.10006460ADC-191115
                                                                         10006500ADC-191108
- #A2B3A:  "("; NUMTOK, 'VDB_LENGTH(inx) := vlToken DIV 1;'; ")".        10006600ADC-191111
+ #A2B3A:  "(";                                                          10006600ADC-191115
+                                                                        10006620ADC-191115
+          NUMTOK, 'VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1; ';10006640ADC-191115
+                                                                        10006660ADC-191115
+          ")".                                                          10006680ADC-191115
                                                                         10006700ADC-191108
  #A2B3A2A: "V9"; "(";                                                   10006800ADC-191114
                  NUMTOK,                                                10006810ADC-191114
