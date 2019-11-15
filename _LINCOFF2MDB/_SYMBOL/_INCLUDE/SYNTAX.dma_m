@@ -15,98 +15,99 @@
           48"01""X          ", RESTOK,                                  00101400 *ENCODER*
           48"02""S9         ", RESTOK,                                  00101500 *ENCODER*
           48"02""V9         ", RESTOK,                                  00101600 *ENCODER*
-          48"03""PIC        ", RESTOK,                                  00101700 *ENCODER*
-          48"06""OCCURS     ", RESTOK,                                  00101800 *ENCODER*
-          5(0)                                                          00101900 *ENCODER*
-         );                                                             00102000 *ENCODER*
-                                                                        00102100 *ENCODER*
-    DEFINE       MAXESCSTACK    = 50 #;                                 00102200 *ENCODER*
-    DEFINE        KWENTRYSIZE            = 3                     #,     00102300 *ENCODER*
-                  KWINXMAX               = 5                     #,     00102400 *ENCODER*
-                 TKWTOKEN                = 0                     #,     00102500 *ENCODER*
-                 TKWTOKENLENGTH          = 0].[47:SZBITS         #,     00102600 *ENCODER*
-                 TKWTYPETOK              = 2                     #;     00102700 *ENCODER*
-                                                                        00102800 *ENCODER*
-    DEFINE CASE_ESCAPE =                                                00102900 *ENCODER*
-           #;                                                           00103000 *ENCODER*
- %----------------------------------------------------------------------00103100 *ENCODER*
-    DEFINE     SZBYTES                 = 1                     #,       00103200 *ENCODER*
-               SZBITS1                 = 7                     #,       00103300 *ENCODER*
-               SZBITS                  = 8                     #,       00103400 *ENCODER*
-               SZTYPETOK               = 1                     #,       00103500 *ENCODER*
-               SZBYTESF(SZ)            = ((SZ) DIV 1).[7:48] FOR 1 #,   00103600 *ENCODER*
-               SZTYPETOKF (SZ)         = ((SZ) DIV 1).[7:48] FOR 1 #,   00103700 *ENCODER*
-               BADENTITY               = 1                     #,       00103800 *ENCODER*
-               ISNTENTITY              = 2                     #;       00103900 *ENCODER*
-    DEFINE RETURN (RESULT) =                                            00104000 *ENCODER*
-        BEGIN                                                           00104100 *ENCODER*
-        ENTITYRESULT := RESULT;                                         00104200 *ENCODER*
-        GO TO EXIT;                                                     00104300 *ENCODER*
-        END OF RETURN #;                                                00104400 *ENCODER*
-    ARRAY        ESCSTACK [0:MAXESCSTACK];                              00104500 *ENCODER*
-    POINTER      PTOKEN,                                                00104600 *ENCODER*
-                 PTOK;                                                  00104700 *ENCODER*
-    REAL         SZTOKEN,                                               00104800 *ENCODER*
-                 IESCSTACK;                                             00104900 *ENCODER*
- %PROCEDURE NEXTTOKEN; FORWARD;                                         00105000 *ENCODER*
- %PROCEDURE ERROR (MSG); VALUE MSG; STRING MSG; FORWARD;                00105100 *ENCODER*
- %PROCEDURE SEND  (MSG); VALUE MSG; STRING MSG; FORWARD;                00105200 *ENCODER*
- BOOLEAN PROCEDURE KEYWORD (TYPETOK);REAL TYPETOK; FORWARD;             00105300 *ENCODER*
- REAL PROCEDURE ESCAPE; FORWARD;                                        00105400 *ENCODER*
- %----------------------------------------------------------------------00105500 *ENCODER*
- REAL PROCEDURE GETPROGRAM;                                             00105600 *ENCODER*
- FORWARD;                                       %%----00500100          00105700 *ENCODER*
- REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               00105800 *ENCODER*
- VALUE inxFather, prevLevel, off;                                       00105900 *ENCODER*
- INTEGER inxFather, prevLevel,off,len;                                  00106000 *ENCODER*
- FORWARD;                                       %%----00502600          00106100 *ENCODER*
- $INCLUDE "LINCOFF2MDB/SYMBOL/NEXTTOKEN/FROMFILE"                       00106200 **USER** 
- BOOLEAN PROCEDURE KEYWORD (TYPETOK);                                   00106300 *ENCODER*
-  REAL  TYPETOK;                                                        00106400 *ENCODER*
-  BEGIN                                                                 00106500 *ENCODER*
-  REAL         IMIN, IMAX, I, INX;                                      00106600 *ENCODER*
-  IMAX := KWINXMAX;                                                     00106700 *ENCODER*
-  DO   BEGIN                                                            00106800 *ENCODER*
-    I   := (IMIN + IMAX) DIV 2;                                         00106900 *ENCODER*
-    INX := I * KWENTRYSIZE;                                             00107000 *ENCODER*
-    IF (PTOK = POINTER(TABKEYWORD[INX+TKWTOKEN])                        00107100 *ENCODER*
-               FOR SZBYTES+SZTOKEN)                                     00107200 *ENCODER*
-    THEN BEGIN                                                          00107300 *ENCODER*
-         KEYWORD := TRUE;                                               00107400 *ENCODER*
-         TYPETOK := TABKEYWORD [INX+TKWTYPETOK];                        00107500 *ENCODER*
-         IMIN    := IMAX + 1;                                           00107600 *ENCODER*
-         END                                                            00107700 *ENCODER*
-    ELSE IF (PTOK < POINTER(TABKEYWORD [INX+TKWTOKEN])                  00107800 *ENCODER*
-                    FOR SZBYTES+SZTOKEN)                                00107900 *ENCODER*
-    THEN IMAX := I - 1                                                  00108000 *ENCODER*
-    ELSE IMIN := I + 1;                                                 00108100 *ENCODER*
-    END                                                                 00108200 *ENCODER*
-  UNTIL (IMIN > IMAX);                                                  00108300 *ENCODER*
- END OF KEYWORD;                                                        00108400 *ENCODER*
- REAL PROCEDURE ESCAPE;                                                 00108500 *ENCODER*
- BEGIN                                                                  00108600 *ENCODER*
-   LABEL   EXIT;                                                        00108700 *ENCODER*
-   REAL    INX, INITIAL_IESCSTACK;                                      00108800 *ENCODER*
-   IF (IESCSTACK < 0) THEN GO TO EXIT;                                  00108900 *ENCODER*
-   INITIAL_IESCSTACK := IESCSTACK;                                      00109000 *ENCODER*
-   WHILE (PTOKEN NEQ ETXTOK)                                            00109100 *ENCODER*
-   DO   BEGIN                                                           00109200 *ENCODER*
-        WHILE (IESCSTACK >= 0)                                          00109300 *ENCODER*
-        DO   BEGIN                                                      00109400 *ENCODER*
-             INX := ESCSTACK [IESCSTACK];                               00109500 *ENCODER*
-             CASE INX                                                   00109600 *ENCODER*
-             OF   BEGIN                                                 00109700 *ENCODER*
-                  CASE_ESCAPE;                                          00109800 *ENCODER*
-             END OF CASE;                                               00109900 *ENCODER*
-            IESCSTACK := * - 1;                                         00110000 *ENCODER*
-            END;                                                        00110100 *ENCODER*
-        NEXTTOKEN;                                                      00110200 *ENCODER*
-    IESCSTACK := INITIAL_IESCSTACK;                                     00110300 *ENCODER*
-    END;                                                                00110400 *ENCODER*
-  INX := 0;                                                             00110500 *ENCODER*
- EXIT:                                                                  00110600 *ENCODER*
-  ESCAPE := INX;                                                        00110700 *ENCODER*
- END OF ESCAPE;                                                         00110800 *ENCODER*
+          48"02""XX         ", RESTOK,                                  00101700 *ENCODER*
+          48"03""PIC        ", RESTOK,                                  00101800 *ENCODER*
+          48"06""OCCURS     ", RESTOK,                                  00101900 *ENCODER*
+          5(0)                                                          00102000 *ENCODER*
+         );                                                             00102100 *ENCODER*
+                                                                        00102200 *ENCODER*
+    DEFINE       MAXESCSTACK    = 50 #;                                 00102300 *ENCODER*
+    DEFINE        KWENTRYSIZE            = 3                     #,     00102400 *ENCODER*
+                  KWINXMAX               = 6                     #,     00102500 *ENCODER*
+                 TKWTOKEN                = 0                     #,     00102600 *ENCODER*
+                 TKWTOKENLENGTH          = 0].[47:SZBITS         #,     00102700 *ENCODER*
+                 TKWTYPETOK              = 2                     #;     00102800 *ENCODER*
+                                                                        00102900 *ENCODER*
+    DEFINE CASE_ESCAPE =                                                00103000 *ENCODER*
+           #;                                                           00103100 *ENCODER*
+ %----------------------------------------------------------------------00103200 *ENCODER*
+    DEFINE     SZBYTES                 = 1                     #,       00103300 *ENCODER*
+               SZBITS1                 = 7                     #,       00103400 *ENCODER*
+               SZBITS                  = 8                     #,       00103500 *ENCODER*
+               SZTYPETOK               = 1                     #,       00103600 *ENCODER*
+               SZBYTESF(SZ)            = ((SZ) DIV 1).[7:48] FOR 1 #,   00103700 *ENCODER*
+               SZTYPETOKF (SZ)         = ((SZ) DIV 1).[7:48] FOR 1 #,   00103800 *ENCODER*
+               BADENTITY               = 1                     #,       00103900 *ENCODER*
+               ISNTENTITY              = 2                     #;       00104000 *ENCODER*
+    DEFINE RETURN (RESULT) =                                            00104100 *ENCODER*
+        BEGIN                                                           00104200 *ENCODER*
+        ENTITYRESULT := RESULT;                                         00104300 *ENCODER*
+        GO TO EXIT;                                                     00104400 *ENCODER*
+        END OF RETURN #;                                                00104500 *ENCODER*
+    ARRAY        ESCSTACK [0:MAXESCSTACK];                              00104600 *ENCODER*
+    POINTER      PTOKEN,                                                00104700 *ENCODER*
+                 PTOK;                                                  00104800 *ENCODER*
+    REAL         SZTOKEN,                                               00104900 *ENCODER*
+                 IESCSTACK;                                             00105000 *ENCODER*
+ %PROCEDURE NEXTTOKEN; FORWARD;                                         00105100 *ENCODER*
+ %PROCEDURE ERROR (MSG); VALUE MSG; STRING MSG; FORWARD;                00105200 *ENCODER*
+ %PROCEDURE SEND  (MSG); VALUE MSG; STRING MSG; FORWARD;                00105300 *ENCODER*
+ BOOLEAN PROCEDURE KEYWORD (TYPETOK);REAL TYPETOK; FORWARD;             00105400 *ENCODER*
+ REAL PROCEDURE ESCAPE; FORWARD;                                        00105500 *ENCODER*
+ %----------------------------------------------------------------------00105600 *ENCODER*
+ REAL PROCEDURE GETPROGRAM;                                             00105700 *ENCODER*
+ FORWARD;                                       %%----00500100          00105800 *ENCODER*
+ REAL PROCEDURE GETLEVEL(inxFather, prevLevel, off, len);               00105900 *ENCODER*
+ VALUE inxFather, prevLevel, off;                                       00106000 *ENCODER*
+ INTEGER inxFather, prevLevel,off,len;                                  00106100 *ENCODER*
+ FORWARD;                                       %%----00502600          00106200 *ENCODER*
+ $INCLUDE "LINCOFF2MDB/SYMBOL/NEXTTOKEN/FROMFILE"                       00106300 **USER** 
+ BOOLEAN PROCEDURE KEYWORD (TYPETOK);                                   00106400 *ENCODER*
+  REAL  TYPETOK;                                                        00106500 *ENCODER*
+  BEGIN                                                                 00106600 *ENCODER*
+  REAL         IMIN, IMAX, I, INX;                                      00106700 *ENCODER*
+  IMAX := KWINXMAX;                                                     00106800 *ENCODER*
+  DO   BEGIN                                                            00106900 *ENCODER*
+    I   := (IMIN + IMAX) DIV 2;                                         00107000 *ENCODER*
+    INX := I * KWENTRYSIZE;                                             00107100 *ENCODER*
+    IF (PTOK = POINTER(TABKEYWORD[INX+TKWTOKEN])                        00107200 *ENCODER*
+               FOR SZBYTES+SZTOKEN)                                     00107300 *ENCODER*
+    THEN BEGIN                                                          00107400 *ENCODER*
+         KEYWORD := TRUE;                                               00107500 *ENCODER*
+         TYPETOK := TABKEYWORD [INX+TKWTYPETOK];                        00107600 *ENCODER*
+         IMIN    := IMAX + 1;                                           00107700 *ENCODER*
+         END                                                            00107800 *ENCODER*
+    ELSE IF (PTOK < POINTER(TABKEYWORD [INX+TKWTOKEN])                  00107900 *ENCODER*
+                    FOR SZBYTES+SZTOKEN)                                00108000 *ENCODER*
+    THEN IMAX := I - 1                                                  00108100 *ENCODER*
+    ELSE IMIN := I + 1;                                                 00108200 *ENCODER*
+    END                                                                 00108300 *ENCODER*
+  UNTIL (IMIN > IMAX);                                                  00108400 *ENCODER*
+ END OF KEYWORD;                                                        00108500 *ENCODER*
+ REAL PROCEDURE ESCAPE;                                                 00108600 *ENCODER*
+ BEGIN                                                                  00108700 *ENCODER*
+   LABEL   EXIT;                                                        00108800 *ENCODER*
+   REAL    INX, INITIAL_IESCSTACK;                                      00108900 *ENCODER*
+   IF (IESCSTACK < 0) THEN GO TO EXIT;                                  00109000 *ENCODER*
+   INITIAL_IESCSTACK := IESCSTACK;                                      00109100 *ENCODER*
+   WHILE (PTOKEN NEQ ETXTOK)                                            00109200 *ENCODER*
+   DO   BEGIN                                                           00109300 *ENCODER*
+        WHILE (IESCSTACK >= 0)                                          00109400 *ENCODER*
+        DO   BEGIN                                                      00109500 *ENCODER*
+             INX := ESCSTACK [IESCSTACK];                               00109600 *ENCODER*
+             CASE INX                                                   00109700 *ENCODER*
+             OF   BEGIN                                                 00109800 *ENCODER*
+                  CASE_ESCAPE;                                          00109900 *ENCODER*
+             END OF CASE;                                               00110000 *ENCODER*
+            IESCSTACK := * - 1;                                         00110100 *ENCODER*
+            END;                                                        00110200 *ENCODER*
+        NEXTTOKEN;                                                      00110300 *ENCODER*
+    IESCSTACK := INITIAL_IESCSTACK;                                     00110400 *ENCODER*
+    END;                                                                00110500 *ENCODER*
+  INX := 0;                                                             00110600 *ENCODER*
+ EXIT:                                                                  00110700 *ENCODER*
+  ESCAPE := INX;                                                        00110800 *ENCODER*
+ END OF ESCAPE;                                                         00110900 *ENCODER*
                                                                         00500000 *ENCODER*
  REAL PROCEDURE GETPROGRAM;                                             00500100 *ENCODER*
  BEGIN                                                                  00500200 *ENCODER*
@@ -140,176 +141,184 @@
                                                                         00503000 *ENCODER*
     LABEL        EXIT, LABA1, LABA2A1, LABA2A2A1, LABA2A2A2A1,          00503100 *ENCODER*
                  LABA2A2A2B1, LABA2B1, LABA2B2A1, LABA2B2B1, LABA2B2C1, 00503200 *ENCODER*
-                 LABA2B3A1, LABA2B3A2A1, LABA2B3A2B1, LABA2B3B1,        00503300 *ENCODER*
-                 LABA2B5, LABA2C1, LABA2C2A1, LABA2C2A2A1, LABA2C2A2B1; 00503400 *ENCODER*
-    BOOLEAN      ENTITYENTERED;                                         00503500 *ENCODER*
-    REAL         INITIAL_IESCSTACK,                                     00503600 *ENCODER*
-                 INXESCAPELABEL,                                        00503700 *ENCODER*
-                 ENTITYRESULT,                                          00503800 *ENCODER*
-                 INVOKERESULT;                                          00503900 *ENCODER*
-    INTEGER actualLevel, inx, childOff, childLen;                       00504000 **USER** 
- LABA1:                                                                 00504100 *ENCODER*
-    IF (PTOKEN NEQ NUMTOK)                                              00504200 *ENCODER*
-    THEN BEGIN                                                          00504300 *ENCODER*
-         IF (NOT ENTITYENTERED) THEN RETURN (ISNTENTITY);               00504400 *ENCODER*
-         ERROR ("<NUMERO> EXPECTED");                                   00504500 *ENCODER*
-         RETURN (BADENTITY);                                            00504600 *ENCODER*
-         END;                                                           00504700 *ENCODER*
-    ENTITYENTERED := TRUE;                                              00504800 *ENCODER*
-    IF (vlToken LEQ prevLevel) THEN                                     00504900 **USER** 
-      RETURN (ISNTENTITY);                                              00505000 **USER** 
-    actualLevel := vlToken;                                             00505100 **USER** 
-    NEXTTOKEN;                                                          00505200 *ENCODER*
-    IF (PTOKEN NEQ IDNTOK)                                              00505300 *ENCODER*
-    THEN BEGIN                                                          00505400 *ENCODER*
-         ERROR ("<IDENTIFICADOR> EXPECTED");                            00505500 *ENCODER*
-         RETURN (BADENTITY);                                            00505600 *ENCODER*
-         END;                                                           00505700 *ENCODER*
-    inx := getAreaTABDB(CDB_GROUPSIZE*6+szToken+1);                     00505800 **USER** 
-    REPLACE PDB_NAME(inx) BY pTok FOR szToken+szBytes;                  00505900 **USER** 
-    VDB_OFFSET(inx) := off DIV 1;                                       00506000 **USER** 
-    VDB_OCCURS(inx) := 1 DIV 1;                                         00506100 **USER** 
-    IF actualLevel = 1 THEN addIspec(inx)                               00506200 **USER** 
-    ELSE addChild(inxFather, inx);                                      00506300 **USER** 
-    NEXTTOKEN;                                                          00506400 *ENCODER*
- LABA2A1:                                                               00506500 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01"".") THEN GO TO LABA2B1;                00506600 *ENCODER*
-    NEXTTOKEN;                                                          00506700 *ENCODER*
-    childOff := 0;                                                      00506800 **USER** 
- LABA2A2A1:                                                             00506900 *ENCODER*
-    childLen := 0;                                                      00507000 **USER** 
- LABA2A2A2A1:                                                           00507100 *ENCODER*
-    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  00507200 *ENCODER*
-    NEQ 0)                                                              00507300 *ENCODER*
-    THEN BEGIN                                                          00507400 *ENCODER*
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2A2A2B1;         00507500 *ENCODER*
-         RETURN (BADENTITY);                                            00507600 *ENCODER*
-         END;                                                           00507700 *ENCODER*
-    childOff :=* + childLen;                                            00507800 **USER** 
-    len :=* + childLen;                                                 00507900 **USER** 
-    VDB_LENGTH(inx) := len DIV 1;                                       00508000 **USER** 
-    GO TO LABA2A2A1;                                                    00508100 *ENCODER*
- LABA2A2A2B1:                                                           00508200 *ENCODER*
-    GO TO EXIT;                                                         00508300 *ENCODER*
- LABA2B1:                                                               00508400 *ENCODER*
-    IF (PTOKEN NEQ RESTOK 48"03""PIC") THEN GO TO LABA2C1;              00508500 *ENCODER*
-    NEXTTOKEN;                                                          00508600 *ENCODER*
-    VDB_LENGTH(inx) := 1; %Por default                                  00508700 **USER** 
- LABA2B2A1:                                                             00508800 *ENCODER*
-    IF (PTOKEN NEQ NUMTOK) THEN GO TO LABA2B2B1;                        00508900 *ENCODER*
-    NEXTTOKEN;                                                          00509000 *ENCODER*
-    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  00509100 **USER** 
-    GO TO LABA2B3A1;                                                    00509200 *ENCODER*
- LABA2B2B1:                                                             00509300 *ENCODER*
-    IF (PTOKEN NEQ RESTOK 48"01""X") THEN GO TO LABA2B2C1;              00509400 *ENCODER*
-    NEXTTOKEN;                                                          00509500 *ENCODER*
-    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    00509600 **USER** 
-    GO TO LABA2B3A1;                                                    00509700 *ENCODER*
- LABA2B2C1:                                                             00509800 *ENCODER*
-    IF (PTOKEN NEQ RESTOK 48"02""S9")                                   00509900 *ENCODER*
-    THEN BEGIN                                                          00510000 *ENCODER*
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       00510100 *ENCODER*
-         SEND ("<NUMERO>");                                             00510200 *ENCODER*
-         SEND ("X");                                                    00510300 *ENCODER*
-         SEND ("S9");                                                   00510400 *ENCODER*
-         RETURN (BADENTITY);                                            00510500 *ENCODER*
-         END;                                                           00510600 *ENCODER*
-    NEXTTOKEN;                                                          00510700 *ENCODER*
-    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  00510800 **USER** 
-    VDB_SIGN(inx):= 1 DIV 1;                                            00510900 **USER** 
- LABA2B3A1:                                                             00511000 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              00511100 *ENCODER*
-    NEXTTOKEN;                                                          00511200 *ENCODER*
-    IF (PTOKEN NEQ NUMTOK)                                              00511300 *ENCODER*
-    THEN BEGIN                                                          00511400 *ENCODER*
-         ERROR ("<NUMERO> EXPECTED");                                   00511500 *ENCODER*
-         RETURN (BADENTITY);                                            00511600 *ENCODER*
-         END;                                                           00511700 *ENCODER*
-    VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1;                  00511800 **USER** 
-    NEXTTOKEN;                                                          00511900 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    00512000 *ENCODER*
-    THEN BEGIN                                                          00512100 *ENCODER*
-         ERROR (") EXPECTED");                                          00512200 *ENCODER*
-         RETURN (BADENTITY);                                            00512300 *ENCODER*
-         END;                                                           00512400 *ENCODER*
-    NEXTTOKEN;                                                          00512500 *ENCODER*
- LABA2B3A2A1:                                                           00512600 *ENCODER*
-    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           00512700 *ENCODER*
-    NEXTTOKEN;                                                          00512800 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    00512900 *ENCODER*
-    THEN BEGIN                                                          00513000 *ENCODER*
-         ERROR ("( EXPECTED");                                          00513100 *ENCODER*
-         RETURN (BADENTITY);                                            00513200 *ENCODER*
-         END;                                                           00513300 *ENCODER*
-    NEXTTOKEN;                                                          00513400 *ENCODER*
-    IF (PTOKEN NEQ NUMTOK)                                              00513500 *ENCODER*
-    THEN BEGIN                                                          00513600 *ENCODER*
-         ERROR ("<NUMERO> EXPECTED");                                   00513700 *ENCODER*
-         RETURN (BADENTITY);                                            00513800 *ENCODER*
-         END;                                                           00513900 *ENCODER*
-    VDB_DECIMALS(inx) := vlToken DIV 1;                                 00514000 **USER** 
-    VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;                  00514100 **USER** 
+                 LABA2B2D1, LABA2B3A1, LABA2B3A2A1, LABA2B3A2B1,        00503300 *ENCODER*
+                 LABA2B3B1, LABA2B5, LABA2C1, LABA2C2A1, LABA2C2A2A1,   00503400 *ENCODER*
+                 LABA2C2A2B1;                                           00503500 *ENCODER*
+    BOOLEAN      ENTITYENTERED;                                         00503600 *ENCODER*
+    REAL         INITIAL_IESCSTACK,                                     00503700 *ENCODER*
+                 INXESCAPELABEL,                                        00503800 *ENCODER*
+                 ENTITYRESULT,                                          00503900 *ENCODER*
+                 INVOKERESULT;                                          00504000 *ENCODER*
+    INTEGER actualLevel, inx, childOff, childLen;                       00504100 **USER** 
+ LABA1:                                                                 00504200 *ENCODER*
+    IF (PTOKEN NEQ NUMTOK)                                              00504300 *ENCODER*
+    THEN BEGIN                                                          00504400 *ENCODER*
+         IF (NOT ENTITYENTERED) THEN RETURN (ISNTENTITY);               00504500 *ENCODER*
+         ERROR ("<NUMERO> EXPECTED");                                   00504600 *ENCODER*
+         RETURN (BADENTITY);                                            00504700 *ENCODER*
+         END;                                                           00504800 *ENCODER*
+    ENTITYENTERED := TRUE;                                              00504900 *ENCODER*
+    IF (vlToken LEQ prevLevel) THEN                                     00505000 **USER** 
+      RETURN (ISNTENTITY);                                              00505100 **USER** 
+    actualLevel := vlToken;                                             00505200 **USER** 
+    NEXTTOKEN;                                                          00505300 *ENCODER*
+    IF (PTOKEN NEQ IDNTOK)                                              00505400 *ENCODER*
+    THEN BEGIN                                                          00505500 *ENCODER*
+         ERROR ("<IDENTIFICADOR> EXPECTED");                            00505600 *ENCODER*
+         RETURN (BADENTITY);                                            00505700 *ENCODER*
+         END;                                                           00505800 *ENCODER*
+    inx := getAreaTABDB(CDB_GROUPSIZE*6+szToken+1);                     00505900 **USER** 
+    REPLACE PDB_NAME(inx) BY pTok FOR szToken+szBytes;                  00506000 **USER** 
+    VDB_OFFSET(inx) := off DIV 1;                                       00506100 **USER** 
+    VDB_OCCURS(inx) := 1 DIV 1;                                         00506200 **USER** 
+    IF actualLevel = 1 THEN addIspec(inx)                               00506300 **USER** 
+    ELSE addChild(inxFather, inx);                                      00506400 **USER** 
+    NEXTTOKEN;                                                          00506500 *ENCODER*
+ LABA2A1:                                                               00506600 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01"".") THEN GO TO LABA2B1;                00506700 *ENCODER*
+    NEXTTOKEN;                                                          00506800 *ENCODER*
+    childOff := 0;                                                      00506900 **USER** 
+ LABA2A2A1:                                                             00507000 *ENCODER*
+    childLen := 0;                                                      00507100 **USER** 
+ LABA2A2A2A1:                                                           00507200 *ENCODER*
+    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  00507300 *ENCODER*
+    NEQ 0)                                                              00507400 *ENCODER*
+    THEN BEGIN                                                          00507500 *ENCODER*
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2A2A2B1;         00507600 *ENCODER*
+         RETURN (BADENTITY);                                            00507700 *ENCODER*
+         END;                                                           00507800 *ENCODER*
+    childOff :=* + childLen;                                            00507900 **USER** 
+    len :=* + childLen;                                                 00508000 **USER** 
+    VDB_LENGTH(inx) := len DIV 1;                                       00508100 **USER** 
+    GO TO LABA2A2A1;                                                    00508200 *ENCODER*
+ LABA2A2A2B1:                                                           00508300 *ENCODER*
+    GO TO EXIT;                                                         00508400 *ENCODER*
+ LABA2B1:                                                               00508500 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"03""PIC") THEN GO TO LABA2C1;              00508600 *ENCODER*
+    NEXTTOKEN;                                                          00508700 *ENCODER*
+    VDB_LENGTH(inx) := 1; %Por default                                  00508800 **USER** 
+ LABA2B2A1:                                                             00508900 *ENCODER*
+    IF (PTOKEN NEQ NUMTOK) THEN GO TO LABA2B2B1;                        00509000 *ENCODER*
+    NEXTTOKEN;                                                          00509100 *ENCODER*
+    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  00509200 **USER** 
+    GO TO LABA2B3A1;                                                    00509300 *ENCODER*
+ LABA2B2B1:                                                             00509400 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"01""X") THEN GO TO LABA2B2C1;              00509500 *ENCODER*
+    NEXTTOKEN;                                                          00509600 *ENCODER*
+    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    00509700 **USER** 
+    GO TO LABA2B3A1;                                                    00509800 *ENCODER*
+ LABA2B2C1:                                                             00509900 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"02""S9") THEN GO TO LABA2B2D1;             00510000 *ENCODER*
+    NEXTTOKEN;                                                          00510100 *ENCODER*
+    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  00510200 **USER** 
+    VDB_SIGN(inx):= 1 DIV 1;                                            00510300 **USER** 
+    GO TO LABA2B3A1;                                                    00510400 *ENCODER*
+ LABA2B2D1:                                                             00510500 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"02""XX")                                   00510600 *ENCODER*
+    THEN BEGIN                                                          00510700 *ENCODER*
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       00510800 *ENCODER*
+         SEND ("<NUMERO>");                                             00510900 *ENCODER*
+         SEND ("X");                                                    00511000 *ENCODER*
+         SEND ("S9");                                                   00511100 *ENCODER*
+         SEND ("XX");                                                   00511200 *ENCODER*
+         RETURN (BADENTITY);                                            00511300 *ENCODER*
+         END;                                                           00511400 *ENCODER*
+    NEXTTOKEN;                                                          00511500 *ENCODER*
+    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    00511600 **USER** 
+    VDB_LENGTH(inx) := 2 DIV 1;                                         00511700 **USER** 
+ LABA2B3A1:                                                             00511800 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              00511900 *ENCODER*
+    NEXTTOKEN;                                                          00512000 *ENCODER*
+    IF (PTOKEN NEQ NUMTOK)                                              00512100 *ENCODER*
+    THEN BEGIN                                                          00512200 *ENCODER*
+         ERROR ("<NUMERO> EXPECTED");                                   00512300 *ENCODER*
+         RETURN (BADENTITY);                                            00512400 *ENCODER*
+         END;                                                           00512500 *ENCODER*
+    VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1;                  00512600 **USER** 
+    NEXTTOKEN;                                                          00512700 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    00512800 *ENCODER*
+    THEN BEGIN                                                          00512900 *ENCODER*
+         ERROR (") EXPECTED");                                          00513000 *ENCODER*
+         RETURN (BADENTITY);                                            00513100 *ENCODER*
+         END;                                                           00513200 *ENCODER*
+    NEXTTOKEN;                                                          00513300 *ENCODER*
+ LABA2B3A2A1:                                                           00513400 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           00513500 *ENCODER*
+    NEXTTOKEN;                                                          00513600 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    00513700 *ENCODER*
+    THEN BEGIN                                                          00513800 *ENCODER*
+         ERROR ("( EXPECTED");                                          00513900 *ENCODER*
+         RETURN (BADENTITY);                                            00514000 *ENCODER*
+         END;                                                           00514100 *ENCODER*
     NEXTTOKEN;                                                          00514200 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    00514300 *ENCODER*
+    IF (PTOKEN NEQ NUMTOK)                                              00514300 *ENCODER*
     THEN BEGIN                                                          00514400 *ENCODER*
-         ERROR (") EXPECTED");                                          00514500 *ENCODER*
+         ERROR ("<NUMERO> EXPECTED");                                   00514500 *ENCODER*
          RETURN (BADENTITY);                                            00514600 *ENCODER*
          END;                                                           00514700 *ENCODER*
-    NEXTTOKEN;                                                          00514800 *ENCODER*
-    GO TO LABA2B5;                                                      00514900 *ENCODER*
- LABA2B3A2B1:                                                           00515000 *ENCODER*
-    GO TO LABA2B5;                                                      00515100 *ENCODER*
- LABA2B3B1:                                                             00515200 *ENCODER*
- LABA2B5:                                                               00515300 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    00515400 *ENCODER*
-    THEN BEGIN                                                          00515500 *ENCODER*
-         ERROR (". EXPECTED");                                          00515600 *ENCODER*
-         RETURN (BADENTITY);                                            00515700 *ENCODER*
-         END;                                                           00515800 *ENCODER*
-    NEXTTOKEN;                                                          00515900 *ENCODER*
-    len := VDB_LENGTH(inx);                                             00516000 **USER** 
-    GO TO EXIT;                                                         00516100 *ENCODER*
- LABA2C1:                                                               00516200 *ENCODER*
-    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               00516300 *ENCODER*
-    THEN BEGIN                                                          00516400 *ENCODER*
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       00516500 *ENCODER*
-         SEND (".");                                                    00516600 *ENCODER*
-         SEND ("PIC");                                                  00516700 *ENCODER*
-         SEND ("OCCURS");                                               00516800 *ENCODER*
-         RETURN (BADENTITY);                                            00516900 *ENCODER*
-         END;                                                           00517000 *ENCODER*
-    NEXTTOKEN;                                                          00517100 *ENCODER*
-    IF (PTOKEN NEQ NUMTOK)                                              00517200 *ENCODER*
-    THEN BEGIN                                                          00517300 *ENCODER*
-         ERROR ("<NUMERO> EXPECTED");                                   00517400 *ENCODER*
-         RETURN (BADENTITY);                                            00517500 *ENCODER*
-         END;                                                           00517600 *ENCODER*
-    VDB_OCCURS(inx) := vlToken DIV 1;                                   00517700 **USER** 
-    NEXTTOKEN;                                                          00517800 *ENCODER*
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    00517900 *ENCODER*
-    THEN BEGIN                                                          00518000 *ENCODER*
-         ERROR (". EXPECTED");                                          00518100 *ENCODER*
-         RETURN (BADENTITY);                                            00518200 *ENCODER*
-         END;                                                           00518300 *ENCODER*
-    NEXTTOKEN;                                                          00518400 *ENCODER*
-    childOff := 0;                                                      00518500 **USER** 
- LABA2C2A1:                                                             00518600 *ENCODER*
-    childLen := 0;                                                      00518700 **USER** 
- LABA2C2A2A1:                                                           00518800 *ENCODER*
-    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  00518900 *ENCODER*
-    NEQ 0)                                                              00519000 *ENCODER*
-    THEN BEGIN                                                          00519100 *ENCODER*
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         00519200 *ENCODER*
-         RETURN (BADENTITY);                                            00519300 *ENCODER*
-         END;                                                           00519400 *ENCODER*
-    childOff :=* + childLen;                                            00519500 **USER** 
-    GO TO LABA2C2A1;                                                    00519600 *ENCODER*
- LABA2C2A2B1:                                                           00519700 *ENCODER*
-    len := childOff * VDB_OCCURS(inx);                                  00519800 **USER** 
-    VDB_LENGTH(inx) := len DIV 1;                                       00519900 **USER** 
- EXIT:                                                                  00520000 *ENCODER*
-    GETLEVEL := ENTITYRESULT;                                           00520100 *ENCODER*
- END OF GETLEVEL;                                                       00520200 *ENCODER*
+    VDB_DECIMALS(inx) := vlToken DIV 1;                                 00514800 **USER** 
+    VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;                  00514900 **USER** 
+    NEXTTOKEN;                                                          00515000 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    00515100 *ENCODER*
+    THEN BEGIN                                                          00515200 *ENCODER*
+         ERROR (") EXPECTED");                                          00515300 *ENCODER*
+         RETURN (BADENTITY);                                            00515400 *ENCODER*
+         END;                                                           00515500 *ENCODER*
+    NEXTTOKEN;                                                          00515600 *ENCODER*
+    GO TO LABA2B5;                                                      00515700 *ENCODER*
+ LABA2B3A2B1:                                                           00515800 *ENCODER*
+    GO TO LABA2B5;                                                      00515900 *ENCODER*
+ LABA2B3B1:                                                             00516000 *ENCODER*
+ LABA2B5:                                                               00516100 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    00516200 *ENCODER*
+    THEN BEGIN                                                          00516300 *ENCODER*
+         ERROR (". EXPECTED");                                          00516400 *ENCODER*
+         RETURN (BADENTITY);                                            00516500 *ENCODER*
+         END;                                                           00516600 *ENCODER*
+    NEXTTOKEN;                                                          00516700 *ENCODER*
+    len := VDB_LENGTH(inx);                                             00516800 **USER** 
+    GO TO EXIT;                                                         00516900 *ENCODER*
+ LABA2C1:                                                               00517000 *ENCODER*
+    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               00517100 *ENCODER*
+    THEN BEGIN                                                          00517200 *ENCODER*
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       00517300 *ENCODER*
+         SEND (".");                                                    00517400 *ENCODER*
+         SEND ("PIC");                                                  00517500 *ENCODER*
+         SEND ("OCCURS");                                               00517600 *ENCODER*
+         RETURN (BADENTITY);                                            00517700 *ENCODER*
+         END;                                                           00517800 *ENCODER*
+    NEXTTOKEN;                                                          00517900 *ENCODER*
+    IF (PTOKEN NEQ NUMTOK)                                              00518000 *ENCODER*
+    THEN BEGIN                                                          00518100 *ENCODER*
+         ERROR ("<NUMERO> EXPECTED");                                   00518200 *ENCODER*
+         RETURN (BADENTITY);                                            00518300 *ENCODER*
+         END;                                                           00518400 *ENCODER*
+    VDB_OCCURS(inx) := vlToken DIV 1;                                   00518500 **USER** 
+    NEXTTOKEN;                                                          00518600 *ENCODER*
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    00518700 *ENCODER*
+    THEN BEGIN                                                          00518800 *ENCODER*
+         ERROR (". EXPECTED");                                          00518900 *ENCODER*
+         RETURN (BADENTITY);                                            00519000 *ENCODER*
+         END;                                                           00519100 *ENCODER*
+    NEXTTOKEN;                                                          00519200 *ENCODER*
+    childOff := 0;                                                      00519300 **USER** 
+ LABA2C2A1:                                                             00519400 *ENCODER*
+    childLen := 0;                                                      00519500 **USER** 
+ LABA2C2A2A1:                                                           00519600 *ENCODER*
+    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  00519700 *ENCODER*
+    NEQ 0)                                                              00519800 *ENCODER*
+    THEN BEGIN                                                          00519900 *ENCODER*
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         00520000 *ENCODER*
+         RETURN (BADENTITY);                                            00520100 *ENCODER*
+         END;                                                           00520200 *ENCODER*
+    childOff :=* + childLen;                                            00520300 **USER** 
+    GO TO LABA2C2A1;                                                    00520400 *ENCODER*
+ LABA2C2A2B1:                                                           00520500 *ENCODER*
+    len := childOff * VDB_OCCURS(inx);                                  00520600 **USER** 
+    VDB_LENGTH(inx) := len DIV 1;                                       00520700 **USER** 
+ EXIT:                                                                  00520800 *ENCODER*
+    GETLEVEL := ENTITYRESULT;                                           00520900 *ENCODER*
+ END OF GETLEVEL;                                                       00521000 *ENCODER*
                                                                         90000000 *ENCODER*
  %----------------------------------------------------------------------90000100 *ENCODER*
     PTOKEN    := TOKARRAY;                                              90000200 *ENCODER*
