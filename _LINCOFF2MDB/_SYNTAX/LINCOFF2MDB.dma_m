@@ -81,7 +81,21 @@ $SET TEXTCOL 5                                                          10000000
                                                                         10006470ADC-191115
  #A2B2D: "XX";   'VDB_PIC(inx) := CDB_ALPHA DIV 1;                    ' 10006480ADC-191115
                  'VDB_LENGTH(inx) := 2 DIV 1;                         '.10006490ADC-191115
-                                                                        10006500ADC-191108
+                                                                        10006495ADC-191115
+ #A2B2E: "V9";   'VDB_PIC(inx) := CDB_NUMERIC DIV 1;                  ' 10006500ADC-191115
+                 'VDB_DECIMALS(inx) := 1 DIV 1;                       ' 10006505ADC-191115
+                 'VDB_LENGTH(inx) := 1 DIV 1;                         '.10006510ADC-191115
+                                                                        10006515ADC-191115
+ #A2B2E2A:"(";                                                          10006520ADC-191115
+                                                                        10006525ADC-191115
+          NUMTOK,                                                       10006530ADC-191115
+                 'VDB_DECIMALS(inx) := vlToken DIV 1;                 ' 10006535ADC-191115
+                 'VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;  ';10006540ADC-191114
+                                                                        10006545ADC-191115
+          ")".                                                          10006550ADC-191111
+                                                                        10006555ADC-191115
+ #A2B2E2B:EMPTY.                                                        10006560ADC-191115
+                                                                        10006565ADC-191108
  #A2B3A:  "(";                                                          10006600ADC-191115
                                                                         10006620ADC-191115
           NUMTOK, 'VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1; ';10006640ADC-191115

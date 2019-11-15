@@ -1584,9 +1584,9 @@ $VERSION 01.001.001                                                     10000200
                                                                         10087550ADC-191115
     LABEL        EXIT, LABA1, LABA2A1, LABA2A2A1, LABA2A2A2A1,          10087600ADC-191115
                  LABA2A2A2B1, LABA2B1, LABA2B2A1, LABA2B2B1, LABA2B2C1, 10087650ADC-191115
-                 LABA2B2D1, LABA2B3A1, LABA2B3A2A1, LABA2B3A2B1,        10087700ADC-191115
-                 LABA2B3B1, LABA2B5, LABA2C1, LABA2C2A1, LABA2C2A2A1,   10087750ADC-191115
-                 LABA2C2A2B1;                                           10087800ADC-191115
+                 LABA2B2D1, LABA2B2E1, LABA2B2E2A1, LABA2B2E2B1,        10087700ADC-191115
+                 LABA2B3A1, LABA2B3A2A1, LABA2B3A2B1, LABA2B3B1,        10087750ADC-191115
+                 LABA2B5, LABA2C1, LABA2C2A1, LABA2C2A2A1, LABA2C2A2B1; 10087800ADC-191115
     BOOLEAN      ENTITYENTERED;                                         10087850ADC-191115
     REAL         INITIAL_IESCSTACK,                                     10087900ADC-191115
                  INXESCAPELABEL,                                        10087950ADC-191115
@@ -1657,121 +1657,148 @@ $VERSION 01.001.001                                                     10000200
     VDB_SIGN(inx):= 1 DIV 1;                                            10091200ADC-191115
     GO TO LABA2B3A1;                                                    10091250ADC-191115
  LABA2B2D1:                                                             10091300ADC-191115
-    IF (PTOKEN NEQ RESTOK 48"02""XX")                                   10091350ADC-191115
-    THEN BEGIN                                                          10091400ADC-191115
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10091450ADC-191115
-         SEND ("<NUMERO>");                                             10091500ADC-191115
-         SEND ("X");                                                    10091550ADC-191115
-         SEND ("S9");                                                   10091600ADC-191115
-         SEND ("XX");                                                   10091650ADC-191115
-         RETURN (BADENTITY);                                            10091700ADC-191115
-         END;                                                           10091750ADC-191115
-    NEXTTOKEN;                                                          10091800ADC-191115
-    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    10091850ADC-191115
-    VDB_LENGTH(inx) := 2 DIV 1;                                         10091900ADC-191115
- LABA2B3A1:                                                             10091950ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              10092000ADC-191115
-    NEXTTOKEN;                                                          10092050ADC-191115
-    IF (PTOKEN NEQ NUMTOK)                                              10092100ADC-191115
-    THEN BEGIN                                                          10092150ADC-191115
-         ERROR ("<NUMERO> EXPECTED");                                   10092200ADC-191115
-         RETURN (BADENTITY);                                            10092250ADC-191115
-         END;                                                           10092300ADC-191115
-    VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1;                  10092350ADC-191115
-    NEXTTOKEN;                                                          10092400ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10092450ADC-191115
-    THEN BEGIN                                                          10092500ADC-191115
-         ERROR (") EXPECTED");                                          10092550ADC-191115
-         RETURN (BADENTITY);                                            10092600ADC-191115
-         END;                                                           10092650ADC-191115
-    NEXTTOKEN;                                                          10092700ADC-191115
- LABA2B3A2A1:                                                           10092750ADC-191115
-    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           10092800ADC-191115
+    IF (PTOKEN NEQ RESTOK 48"02""XX") THEN GO TO LABA2B2E1;             10091350ADC-191115
+    NEXTTOKEN;                                                          10091400ADC-191115
+    VDB_PIC(inx) := CDB_ALPHA DIV 1;                                    10091450ADC-191115
+    VDB_LENGTH(inx) := 2 DIV 1;                                         10091500ADC-191115
+    GO TO LABA2B3A1;                                                    10091550ADC-191115
+ LABA2B2E1:                                                             10091600ADC-191115
+    IF (PTOKEN NEQ RESTOK 48"02""V9")                                   10091650ADC-191115
+    THEN BEGIN                                                          10091700ADC-191115
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10091750ADC-191115
+         SEND ("<NUMERO>");                                             10091800ADC-191115
+         SEND ("X");                                                    10091850ADC-191115
+         SEND ("S9");                                                   10091900ADC-191115
+         SEND ("XX");                                                   10091950ADC-191115
+         SEND ("V9");                                                   10092000ADC-191115
+         RETURN (BADENTITY);                                            10092050ADC-191115
+         END;                                                           10092100ADC-191115
+    NEXTTOKEN;                                                          10092150ADC-191115
+    VDB_PIC(inx) := CDB_NUMERIC DIV 1;                                  10092200ADC-191115
+    VDB_DECIMALS(inx) := 1 DIV 1;                                       10092250ADC-191115
+    VDB_LENGTH(inx) := 1 DIV 1;                                         10092300ADC-191115
+ LABA2B2E2A1:                                                           10092350ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B2E2B1;            10092400ADC-191115
+    NEXTTOKEN;                                                          10092450ADC-191115
+    IF (PTOKEN NEQ NUMTOK)                                              10092500ADC-191115
+    THEN BEGIN                                                          10092550ADC-191115
+         ERROR ("<NUMERO> EXPECTED");                                   10092600ADC-191115
+         RETURN (BADENTITY);                                            10092650ADC-191115
+         END;                                                           10092700ADC-191115
+    VDB_DECIMALS(inx) := vlToken DIV 1;                                 10092750ADC-191115
+    VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;                  10092800ADC-191115
     NEXTTOKEN;                                                          10092850ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    10092900ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10092900ADC-191115
     THEN BEGIN                                                          10092950ADC-191115
-         ERROR ("( EXPECTED");                                          10093000ADC-191115
+         ERROR (") EXPECTED");                                          10093000ADC-191115
          RETURN (BADENTITY);                                            10093050ADC-191115
          END;                                                           10093100ADC-191115
     NEXTTOKEN;                                                          10093150ADC-191115
-    IF (PTOKEN NEQ NUMTOK)                                              10093200ADC-191115
-    THEN BEGIN                                                          10093250ADC-191115
-         ERROR ("<NUMERO> EXPECTED");                                   10093300ADC-191115
-         RETURN (BADENTITY);                                            10093350ADC-191115
-         END;                                                           10093400ADC-191115
-    VDB_DECIMALS(inx) := vlToken DIV 1;                                 10093450ADC-191115
-    VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;                  10093500ADC-191115
-    NEXTTOKEN;                                                          10093550ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10093600ADC-191115
-    THEN BEGIN                                                          10093650ADC-191115
-         ERROR (") EXPECTED");                                          10093700ADC-191115
-         RETURN (BADENTITY);                                            10093750ADC-191115
-         END;                                                           10093800ADC-191115
-    NEXTTOKEN;                                                          10093850ADC-191115
-    GO TO LABA2B5;                                                      10093900ADC-191115
- LABA2B3A2B1:                                                           10093950ADC-191115
-    GO TO LABA2B5;                                                      10094000ADC-191115
- LABA2B3B1:                                                             10094050ADC-191115
- LABA2B5:                                                               10094100ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10094150ADC-191115
-    THEN BEGIN                                                          10094200ADC-191115
-         ERROR (". EXPECTED");                                          10094250ADC-191115
-         RETURN (BADENTITY);                                            10094300ADC-191115
-         END;                                                           10094350ADC-191115
-    NEXTTOKEN;                                                          10094400ADC-191115
-    len := VDB_LENGTH(inx);                                             10094450ADC-191115
-    GO TO EXIT;                                                         10094500ADC-191115
- LABA2C1:                                                               10094550ADC-191115
-    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               10094600ADC-191115
-    THEN BEGIN                                                          10094650ADC-191115
-         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10094700ADC-191115
-         SEND (".");                                                    10094750ADC-191115
-         SEND ("PIC");                                                  10094800ADC-191115
-         SEND ("OCCURS");                                               10094850ADC-191115
-         RETURN (BADENTITY);                                            10094900ADC-191115
-         END;                                                           10094950ADC-191115
-    NEXTTOKEN;                                                          10095000ADC-191115
-    IF (PTOKEN NEQ NUMTOK)                                              10095050ADC-191115
-    THEN BEGIN                                                          10095100ADC-191115
-         ERROR ("<NUMERO> EXPECTED");                                   10095150ADC-191115
-         RETURN (BADENTITY);                                            10095200ADC-191115
-         END;                                                           10095250ADC-191115
-    VDB_OCCURS(inx) := vlToken DIV 1;                                   10095300ADC-191115
-    NEXTTOKEN;                                                          10095350ADC-191115
-    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10095400ADC-191115
-    THEN BEGIN                                                          10095450ADC-191115
-         ERROR (". EXPECTED");                                          10095500ADC-191115
-         RETURN (BADENTITY);                                            10095550ADC-191115
-         END;                                                           10095600ADC-191115
-    NEXTTOKEN;                                                          10095650ADC-191115
-    childOff := 0;                                                      10095700ADC-191115
- LABA2C2A1:                                                             10095750ADC-191115
-    childLen := 0;                                                      10095800ADC-191115
- LABA2C2A2A1:                                                           10095850ADC-191115
-    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10095900ADC-191115
-    NEQ 0)                                                              10095950ADC-191115
+    GO TO LABA2B3A1;                                                    10093200ADC-191115
+ LABA2B2E2B1:                                                           10093250ADC-191115
+ LABA2B3A1:                                                             10093300ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01""(") THEN GO TO LABA2B3B1;              10093350ADC-191115
+    NEXTTOKEN;                                                          10093400ADC-191115
+    IF (PTOKEN NEQ NUMTOK)                                              10093450ADC-191115
+    THEN BEGIN                                                          10093500ADC-191115
+         ERROR ("<NUMERO> EXPECTED");                                   10093550ADC-191115
+         RETURN (BADENTITY);                                            10093600ADC-191115
+         END;                                                           10093650ADC-191115
+    VDB_LENGTH(inx) := (vlToken + VDB_SIGN(inx))DIV 1;                  10093700ADC-191115
+    NEXTTOKEN;                                                          10093750ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10093800ADC-191115
+    THEN BEGIN                                                          10093850ADC-191115
+         ERROR (") EXPECTED");                                          10093900ADC-191115
+         RETURN (BADENTITY);                                            10093950ADC-191115
+         END;                                                           10094000ADC-191115
+    NEXTTOKEN;                                                          10094050ADC-191115
+ LABA2B3A2A1:                                                           10094100ADC-191115
+    IF (PTOKEN NEQ RESTOK 48"02""V9") THEN GO TO LABA2B3A2B1;           10094150ADC-191115
+    NEXTTOKEN;                                                          10094200ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01""(")                                    10094250ADC-191115
+    THEN BEGIN                                                          10094300ADC-191115
+         ERROR ("( EXPECTED");                                          10094350ADC-191115
+         RETURN (BADENTITY);                                            10094400ADC-191115
+         END;                                                           10094450ADC-191115
+    NEXTTOKEN;                                                          10094500ADC-191115
+    IF (PTOKEN NEQ NUMTOK)                                              10094550ADC-191115
+    THEN BEGIN                                                          10094600ADC-191115
+         ERROR ("<NUMERO> EXPECTED");                                   10094650ADC-191115
+         RETURN (BADENTITY);                                            10094700ADC-191115
+         END;                                                           10094750ADC-191115
+    VDB_DECIMALS(inx) := vlToken DIV 1;                                 10094800ADC-191115
+    VDB_LENGTH(inx) := (VDB_LENGTH(inx)+vlToken)DIV 1;                  10094850ADC-191115
+    NEXTTOKEN;                                                          10094900ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01"")")                                    10094950ADC-191115
+    THEN BEGIN                                                          10095000ADC-191115
+         ERROR (") EXPECTED");                                          10095050ADC-191115
+         RETURN (BADENTITY);                                            10095100ADC-191115
+         END;                                                           10095150ADC-191115
+    NEXTTOKEN;                                                          10095200ADC-191115
+    GO TO LABA2B5;                                                      10095250ADC-191115
+ LABA2B3A2B1:                                                           10095300ADC-191115
+    GO TO LABA2B5;                                                      10095350ADC-191115
+ LABA2B3B1:                                                             10095400ADC-191115
+ LABA2B5:                                                               10095450ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10095500ADC-191115
+    THEN BEGIN                                                          10095550ADC-191115
+         ERROR (". EXPECTED");                                          10095600ADC-191115
+         RETURN (BADENTITY);                                            10095650ADC-191115
+         END;                                                           10095700ADC-191115
+    NEXTTOKEN;                                                          10095750ADC-191115
+    len := VDB_LENGTH(inx);                                             10095800ADC-191115
+    GO TO EXIT;                                                         10095850ADC-191115
+ LABA2C1:                                                               10095900ADC-191115
+    IF (PTOKEN NEQ RESTOK 48"06""OCCURS")                               10095950ADC-191115
     THEN BEGIN                                                          10096000ADC-191115
-         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         10096050ADC-191115
-         RETURN (BADENTITY);                                            10096100ADC-191115
-         END;                                                           10096150ADC-191115
-    childOff :=* + childLen;                                            10096200ADC-191115
-    GO TO LABA2C2A1;                                                    10096250ADC-191115
- LABA2C2A2B1:                                                           10096300ADC-191115
-    len := childOff * VDB_OCCURS(inx);                                  10096350ADC-191115
-    VDB_LENGTH(inx) := len DIV 1;                                       10096400ADC-191115
- EXIT:                                                                  10096450ADC-191115
-    GETLEVEL := ENTITYRESULT;                                           10096500ADC-191115
- END OF GETLEVEL;                                                       10096550ADC-191115
-                                                                        10096600ADC-191115
- %----------------------------------------------------------------------10096650ADC-191115
-    PTOKEN    := TOKARRAY;                                              10096700ADC-191115
-    PTOK      := PTOKEN+SZTYPETOK;                                      10096750ADC-191115
-    IESCSTACK := -1;                                                    10096800ADC-191115
- %----------------------------------------------------------------------10096850ADC-191115
-    INICIO;                                                             10096900ADC-191115
-    NEXTTOKEN;                                                          10096950ADC-191115
-    GETPROGRAM;                                                         10097000ADC-191115
-    PROCESO;                                                            10097050ADC-191115
+         ERROR ("ONE OF THE FOLLOWING EXPECTED");                       10096050ADC-191115
+         SEND (".");                                                    10096100ADC-191115
+         SEND ("PIC");                                                  10096150ADC-191115
+         SEND ("OCCURS");                                               10096200ADC-191115
+         RETURN (BADENTITY);                                            10096250ADC-191115
+         END;                                                           10096300ADC-191115
+    NEXTTOKEN;                                                          10096350ADC-191115
+    IF (PTOKEN NEQ NUMTOK)                                              10096400ADC-191115
+    THEN BEGIN                                                          10096450ADC-191115
+         ERROR ("<NUMERO> EXPECTED");                                   10096500ADC-191115
+         RETURN (BADENTITY);                                            10096550ADC-191115
+         END;                                                           10096600ADC-191115
+    VDB_OCCURS(inx) := vlToken DIV 1;                                   10096650ADC-191115
+    NEXTTOKEN;                                                          10096700ADC-191115
+    IF (PTOKEN NEQ CHRTOK 48"01"".")                                    10096750ADC-191115
+    THEN BEGIN                                                          10096800ADC-191115
+         ERROR (". EXPECTED");                                          10096850ADC-191115
+         RETURN (BADENTITY);                                            10096900ADC-191115
+         END;                                                           10096950ADC-191115
+    NEXTTOKEN;                                                          10097000ADC-191115
+    childOff := 0;                                                      10097050ADC-191115
+ LABA2C2A1:                                                             10097100ADC-191115
+    childLen := 0;                                                      10097150ADC-191115
+ LABA2C2A2A1:                                                           10097200ADC-191115
+    IF (INVOKERESULT := GETLEVEL(inx, actualLevel, childOff, childLen)  10097250ADC-191115
+    NEQ 0)                                                              10097300ADC-191115
+    THEN BEGIN                                                          10097350ADC-191115
+         IF (INVOKERESULT = ISNTENTITY) THEN GO TO LABA2C2A2B1;         10097400ADC-191115
+         RETURN (BADENTITY);                                            10097450ADC-191115
+         END;                                                           10097500ADC-191115
+    childOff :=* + childLen;                                            10097550ADC-191115
+    GO TO LABA2C2A1;                                                    10097600ADC-191115
+ LABA2C2A2B1:                                                           10097650ADC-191115
+    len := childOff * VDB_OCCURS(inx);                                  10097700ADC-191115
+    VDB_LENGTH(inx) := len DIV 1;                                       10097750ADC-191115
+ EXIT:                                                                  10097800ADC-191115
+    GETLEVEL := ENTITYRESULT;                                           10097850ADC-191115
+ END OF GETLEVEL;                                                       10097900ADC-191115
+                                                                        10097950ADC-191115
+ %----------------------------------------------------------------------10098000ADC-191115
+    PTOKEN    := TOKARRAY;                                              10098050ADC-191115
+    PTOK      := PTOKEN+SZTYPETOK;                                      10098100ADC-191115
+    IESCSTACK := -1;                                                    10098150ADC-191115
+ %----------------------------------------------------------------------10098200ADC-191115
+    INICIO;                                                             10098250ADC-191115
+    NEXTTOKEN;                                                          10098300ADC-191115
+    GETPROGRAM;                                                         10098350ADC-191115
+    PROCESO;                                                            10098400ADC-191115
  END of getLINCOFF;                                                     10173900          
                                                                         10174000          
  PROCEDURE dumpGroup(inx);                                              10174002ADC-191113
